@@ -1,36 +1,70 @@
-# Q-table: State → Action → Value
-Q_TABLE = {
-    "dry_hot": {0: 0, 1: 0},
-    "wet_rain": {0: 0, 1: 0},
-    "normal": {0: 0, 1: 0}
-}
+import random
 
-LEARNING_RATE = 0.3
+
+# Action space
+# 0 = Do not irrigate
+# 1 = Irrigate
+ACTIONS = [0, 1]
 
 
 def get_state(data):
-    if data["soil_moisture"] < 30 and data["temperature"] > 32:
-        return "dry_hot"
-    if data["rain_forecast"] == 1:
-        return "wet_rain"
-    return "normal"
-
-
-def choose_action(state):
     """
-    Choose action with highest Q-value
+    Convert farm data into an RL-friendly state tuple.
+
+    data: dict with farm_data.csv fields
     """
-    actions = Q_TABLE[state]
-    return max(actions, key=actions.get)
+
+    return (
+        data["soil_moisture_pct"],
+        data["rainfall_mm"],
+        data["temperature_c"],
+        data["humidity_pct"],
+        data["crop"],
+        data["growth_stage"],
+        data["disease_risk"],
+        data["pest_risk"]
+    )
 
 
-def update_q_table(state, action, reward):
+def choose_action(state, epsilon=0.1):
     """
-    Q-learning update (simplified)
+    Epsilon-greedy policy.
+
+    state: output of get_state()
+    epsilon: exploration rate
     """
-    old_value = Q_TABLE[state][action]
-    Q_TABLE[state][action] = old_value + LEARNING_RATE * (reward - old_value)
+
+    # Exploration
+    if random.random() < epsilon:
+        return random.choice(ACTIONS)
+
+    # Exploitation (simple heuristic-based policy for now)
+    soil_moisture = state[0]
+    rainfall = state[1]
+    disease_risk = state[6]
+
+    # Heuristic rules
+    if rainfall >= 80:
+        return 0
+
+    if soil_moisture < 45 and disease_risk != "high":
+        return 1
+
+    return 0
 
 
-def get_q_table():
-    return Q_TABLE
+def update_policy(state, action, regret):
+    """
+    Placeholder for future learning logic.
+
+    state: RL state
+    action: action taken
+    regret: regret score from regret_engine
+    """
+
+    # Future scope:
+    # - Q-learning
+    # - Policy gradient
+    # - Regret minimization
+
+    pass

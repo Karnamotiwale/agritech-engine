@@ -1,23 +1,50 @@
-def analyze_regret(decision, outcome):
+def calculate_regret(action_taken, actual_outcome, data):
     """
-    decision: 0 or 1 (final decision)
-    outcome: string describing actual result
+    Calculate regret after an irrigation decision.
+
+    action_taken: 0 or 1 (what the system decided)
+    actual_outcome: 0 or 1 (what SHOULD have been done)
+        - derived later from yield / stress / expert label
+    data: dict with farm_data.csv fields
+
+    Returns:
+        regret score (float, >= 0)
     """
 
-    regret = False
-    reason = "Decision was appropriate"
+    crop = data["crop"]
+    soil_moisture = data["soil_moisture_pct"]
+    rainfall = data["rainfall_mm"]
+    disease_risk = data["disease_risk"]
 
-    # If irrigated but rain happened → regret
-    if decision == 1 and outcome == "rain":
-        regret = True
-        reason = "Irrigation was unnecessary due to rain"
+    # If decision was correct → zero regret
+    if action_taken == actual_outcome:
+        return 0.0
 
-    # If did not irrigate and crop stress increased → regret
-    if decision == 0 and outcome == "crop_stress":
-        regret = True
-        reason = "Crop stress increased due to no irrigation"
+    regret = 1.0  # base regret
 
-    return {
-        "regret": regret,
-        "reason": reason
-    }
+    # ---------------- CONTEXTUAL WEIGHTING ----------------
+
+    # Missed irrigation during low moisture → high regret
+    if action_taken == 0 and soil_moisture < 40:
+        regret += 1.5
+
+    # Unnecessary irrigation during high moisture → high regret
+    if action_taken == 1 and soil_moisture > 70:
+        regret += 1.5
+
+    # Rainfall makes unnecessary irrigation worse
+    if action_taken == 1 and rainfall >= 80:
+        regret += 2.0
+
+    # Crop sensitivity adjustment
+    if crop == "pulses":
+        regret *= 1.3  # pulses are fragile
+
+    if crop == "rice":
+        regret *= 0.7  # rice tolerates water
+
+    # Disease risk: irrigation during high disease risk is worse
+    if disease_risk == "high" and action_taken == 1:
+        regret += 1.0
+
+    return regret
