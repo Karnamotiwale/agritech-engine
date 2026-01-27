@@ -1,70 +1,131 @@
 import random
+from supabase import create_client
+from dotenv import load_dotenv
+import os
+
+# --------------------------------------------------
+# ENV + SUPABASE CLIENT
+# --------------------------------------------------
+load_dotenv()
+
+SUPABASE_URL = os.getenv("SUPABASE_URL")
+SUPABASE_KEY = os.getenv("SUPABASE_SERVICE_KEY")
+
+supabase = create_client(SUPABASE_URL, SUPABASE_KEY)
+
+TABLE_NAME = "rl_q_table"
+
+# --------------------------------------------------
+# ACTION SPACE
+# --------------------------------------------------
+ACTIONS = [0, 1]  # 0 = no irrigation, 1 = irrigate
+
+# --------------------------------------------------
+# HYPERPARAMETERS
+# --------------------------------------------------
+ALPHA = 0.1
+GAMMA = 0.9
+EPSILON = 0.1
 
 
-# Action space
-# 0 = Do not irrigate
-# 1 = Irrigate
-ACTIONS = [0, 1]
+# --------------------------------------------------
+# STATE DISCRETIZATION
+# --------------------------------------------------
+def discretize_soil_moisture(value):
+    if value < 40:
+        return "low"
+    elif value < 65:
+        return "medium"
+    else:
+        return "high"
 
 
+def discretize_rainfall(value):
+    if value < 30:
+        return "low"
+    elif value < 80:
+        return "medium"
+    else:
+        return "high"
+
+
+# --------------------------------------------------
+# STATE BUILDER
+# --------------------------------------------------
 def get_state(data):
-    """
-    Convert farm data into an RL-friendly state tuple.
+    return {
+        "soil_moisture_level": discretize_soil_moisture(data["soil_moisture_pct"]),
+        "rainfall_level": discretize_rainfall(data["rainfall_mm"]),
+        "crop": data["crop"],
+        "growth_stage": data["growth_stage"],
+        "disease_risk": data["disease_risk"]
+    }
 
-    data: dict with farm_data.csv fields
-    """
 
-    return (
-        data["soil_moisture_pct"],
-        data["rainfall_mm"],
-        data["temperature_c"],
-        data["humidity_pct"],
-        data["crop"],
-        data["growth_stage"],
-        data["disease_risk"],
-        data["pest_risk"]
+# --------------------------------------------------
+# FETCH Q-VALUES FROM SUPABASE
+# --------------------------------------------------
+def fetch_q_values(state):
+    response = (
+        supabase
+        .table(TABLE_NAME)
+        .select("action, q_value")
+        .eq("soil_moisture_level", state["soil_moisture_level"])
+        .eq("rainfall_level", state["rainfall_level"])
+        .eq("crop", state["crop"])
+        .eq("growth_stage", state["growth_stage"])
+        .eq("disease_risk", state["disease_risk"])
+        .execute()
     )
 
+    q_values = {0: 0.0, 1: 0.0}
 
-def choose_action(state, epsilon=0.1):
-    """
-    Epsilon-greedy policy.
+    for row in response.data:
+        q_values[row["action"]] = row["q_value"]
 
-    state: output of get_state()
-    epsilon: exploration rate
-    """
+    return q_values
 
+
+# --------------------------------------------------
+# ACTION SELECTION (EPSILON-GREEDY)
+# --------------------------------------------------
+def choose_action(state):
     # Exploration
-    if random.random() < epsilon:
+    if random.random() < EPSILON:
         return random.choice(ACTIONS)
 
-    # Exploitation (simple heuristic-based policy for now)
-    soil_moisture = state[0]
-    rainfall = state[1]
-    disease_risk = state[6]
-
-    # Heuristic rules
-    if rainfall >= 80:
-        return 0
-
-    if soil_moisture < 45 and disease_risk != "high":
-        return 1
-
-    return 0
+    # Exploitation
+    q_values = fetch_q_values(state)
+    return max(q_values, key=q_values.get)
 
 
-def update_policy(state, action, regret):
-    """
-    Placeholder for future learning logic.
+# --------------------------------------------------
+# Q-LEARNING UPDATE (PERSISTENT)
+# --------------------------------------------------
+def update_q_table(state, action, reward, next_state):
+    current_q = fetch_q_values(state)[action]
+    next_max_q = max(fetch_q_values(next_state).values())
 
-    state: RL state
-    action: action taken
-    regret: regret score from regret_engine
-    """
+    new_q = current_q + ALPHA * (reward + GAMMA * next_max_q - current_q)
 
-    # Future scope:
-    # - Q-learning
-    # - Policy gradient
-    # - Regret minimization
+    # Upsert Q-value
+    supabase.table(TABLE_NAME).upsert(
+        {
+            "soil_moisture_level": state["soil_moisture_level"],
+            "rainfall_level": state["rainfall_level"],
+            "crop": state["crop"],
+            "growth_stage": state["growth_stage"],
+            "disease_risk": state["disease_risk"],
+            "action": action,
+            "q_value": new_q,
+            "visit_count": 1
+        },
+        on_conflict="soil_moisture_level,rainfall_level,crop,growth_stage,disease_risk,action"
+    ).execute()
 
-    pass
+
+# --------------------------------------------------
+# DEBUG / XAI SUPPORT
+# --------------------------------------------------
+def get_q_values(state):
+    return fetch_q_values(state)

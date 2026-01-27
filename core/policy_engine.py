@@ -1,61 +1,137 @@
-def is_action_allowed(action, data=None):
+from supabase import create_client
+from dotenv import load_dotenv
+import os
+
+# --------------------------------------------------
+# ENV + SUPABASE CLIENT
+# --------------------------------------------------
+load_dotenv()
+
+SUPABASE_URL = os.getenv("SUPABASE_URL")
+SUPABASE_KEY = os.getenv("SUPABASE_SERVICE_KEY")
+
+supabase = create_client(SUPABASE_URL, SUPABASE_KEY)
+
+TABLE_NAME = "policy_penalties"
+
+
+# --------------------------------------------------
+# MAIN POLICY FUNCTION
+# --------------------------------------------------
+def is_action_allowed(action, data):
     """
-    Policy layer: final safety gate.
-    action: 0 (do not irrigate) or 1 (irrigate)
+    Persistent policy engine.
+
+    action: 0 (do not irrigate) | 1 (irrigate)
     data: dict with farm_data.csv fields
+
+    Returns:
+        True  -> action allowed
+        False -> action blocked (penalty recorded)
     """
 
-    # If no irrigation requested, always allowed
+    # If no irrigation requested → always allowed
     if action == 0:
         return True
 
-    # Defensive check
-    if data is None:
-        return False
-
     crop = data["crop"]
+    growth_stage = data["growth_stage"]
     soil_moisture = data["soil_moisture_pct"]
     rainfall = data["rainfall_mm"]
     disease_risk = data["disease_risk"]
     pest_risk = data["pest_risk"]
 
-    # ---------------- GLOBAL SAFETY RULES ----------------
-
-    # Rule 1: Heavy rainfall blocks irrigation
+    # ---------------- RULE 1: HEAVY RAIN ----------------
     if rainfall >= 80:
+        _log_penalty(
+            data, action,
+            penalty=2.0,
+            rule="RAIN_BLOCK_RULE",
+            explanation="Heavy rainfall detected; irrigation blocked."
+        )
         return False
 
-    # Rule 2: High soil moisture blocks irrigation
+    # ---------------- RULE 2: EXCESS SOIL MOISTURE ----------------
     if soil_moisture >= 70:
+        _log_penalty(
+            data, action,
+            penalty=1.5,
+            rule="HIGH_SOIL_MOISTURE",
+            explanation="Soil moisture already sufficient."
+        )
         return False
 
-    # ---------------- CROP-SPECIFIC RULES ----------------
-
-    # Pulses: extremely sensitive to waterlogging
+    # ---------------- RULE 3: PULSES WATERLOGGING ----------------
     if crop == "pulses" and soil_moisture > 60:
+        _log_penalty(
+            data, action,
+            penalty=2.5,
+            rule="PULSES_WATERLOGGING_RULE",
+            explanation="Pulses are sensitive to waterlogging."
+        )
         return False
 
-    # Rice: allow irrigation even at higher moisture (flooded crop)
-    if crop == "rice" and soil_moisture <= 85:
-        return True
-
-    # Wheat & maize: moderate tolerance
-    if crop in ["wheat", "maize"] and soil_moisture > 65:
-        return False
-
-    # Sugarcane: deep-rooted but avoid excess water
-    if crop == "sugarcane" and soil_moisture > 80:
-        return False
-
-    # ---------------- DISEASE / PEST RULES ----------------
-
-    # High disease risk → avoid irrigation (reduces fungal spread)
+    # ---------------- RULE 4: DISEASE RISK ----------------
     if disease_risk == "high":
+        _log_penalty(
+            data, action,
+            penalty=3.0,
+            rule="DISEASE_IRRIGATION_BLOCK",
+            explanation="High disease risk; irrigation may increase spread."
+        )
         return False
 
-    # Pest risk alone does NOT block irrigation
-    # (handled in advisory, not control)
+    # ---------------- RULE 5: CROP-SPECIFIC LIMITS ----------------
+    if crop == "wheat" and soil_moisture > 65:
+        _log_penalty(
+            data, action,
+            penalty=1.2,
+            rule="WHEAT_OVER_IRRIGATION",
+            explanation="Soil moisture above safe limit for wheat."
+        )
+        return False
 
-    # ---------------- DEFAULT ----------------
+    if crop == "maize" and soil_moisture > 65:
+        _log_penalty(
+            data, action,
+            penalty=1.2,
+            rule="MAIZE_OVER_IRRIGATION",
+            explanation="Soil moisture above safe limit for maize."
+        )
+        return False
 
+    if crop == "sugarcane" and soil_moisture > 80:
+        _log_penalty(
+            data, action,
+            penalty=1.0,
+            rule="SUGARCANE_EXCESS_MOISTURE",
+            explanation="Sugarcane does not require irrigation at this moisture."
+        )
+        return False
+
+    # ---------------- DEFAULT: ALLOWED ----------------
     return True
+
+
+# --------------------------------------------------
+# INTERNAL: LOG PENALTY TO SUPABASE
+# --------------------------------------------------
+def _log_penalty(data, action, penalty, rule, explanation):
+    """
+    Persist policy violation into Supabase.
+    """
+
+    supabase.table(TABLE_NAME).insert({
+        "crop": data["crop"],
+        "growth_stage": data["growth_stage"],
+        "soil_moisture_pct": data["soil_moisture_pct"],
+        "rainfall_mm": data["rainfall_mm"],
+        "disease_risk": data["disease_risk"],
+        "pest_risk": data["pest_risk"],
+        "action": action,
+        "allowed": False,
+        "penalty_score": penalty,
+        "policy_rule": rule,
+        "explanation": explanation
+    }).execute()
+

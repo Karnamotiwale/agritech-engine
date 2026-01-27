@@ -1,0 +1,3 @@
+SUPABASE_URL="https://jmkcjyeufdfptwnzceyj.supabase.co"
+SUPABASE_KEY="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Impta2NqeWV1ZmRmcHR3bnpjZXlqIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc2NDMzMzg5MywiZXhwIjoyMDc5OTA5ODkzfQ.MnjNVPIKt295DPzduh_81h8WYr3hRO5gkLFjty-ITpY"
+supabase = create_client(SUPABASE_URL, SUPABASE_KEY)
