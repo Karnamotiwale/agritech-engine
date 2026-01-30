@@ -95,3 +95,7 @@ class IrrigationMLModel:
 
         prediction = model.predict(X)[0]
         return int(prediction)
+if __name__ == "__main__":
+    model = IrrigationMLModel()
+    model.train()
+    print("✅ Model retrained and saved successfully")

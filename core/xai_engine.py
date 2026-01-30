@@ -1,9 +1,10 @@
-def generate_explanation(data, decision):
+def generate_explanation(data, ml_prediction, decision):
     """
     Generate human-readable explanations and advisories.
 
     data: dict with farm_data.csv fields
-    decision: 0 (no irrigation) or 1 (irrigation)
+    ml_prediction: ML model's raw prediction (0 or 1)
+    decision: final decision after rules/policy/RL (0 or 1)
 
     Returns:
         dict with explanations and advisories

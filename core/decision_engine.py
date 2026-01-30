@@ -50,7 +50,7 @@ def decide_action(ml_prediction, data):
     ]
 
     if data["growth_stage"] in critical_stages:
-        if is_action_allowed(rl_action):
+        if is_action_allowed(rl_action, data):
             return {
                 "decision": rl_action,
                 "reason": f"Critical growth stage: {data['growth_stage']}"
@@ -58,7 +58,7 @@ def decide_action(ml_prediction, data):
 
     # ---------------- RL DECISION ----------------
 
-    if is_action_allowed(rl_action):
+    if is_action_allowed(rl_action, data):
         return {
             "decision": rl_action,
             "reason": "RL policy selected action"

@@ -1,17 +1,5 @@
 import random
-from supabase import create_client
-from dotenv import load_dotenv
-import os
-
-# --------------------------------------------------
-# ENV + SUPABASE CLIENT
-# --------------------------------------------------
-load_dotenv()
-
-SUPABASE_URL = os.getenv("SUPABASE_URL")
-SUPABASE_KEY = os.getenv("SUPABASE_SERVICE_KEY")
-
-supabase = create_client(SUPABASE_URL, SUPABASE_KEY)
+from core.supabase_client import supabase
 
 TABLE_NAME = "rl_q_table"
 
@@ -102,11 +90,16 @@ def choose_action(state):
 # --------------------------------------------------
 # Q-LEARNING UPDATE (PERSISTENT)
 # --------------------------------------------------
-def update_q_table(state, action, reward, next_state):
+def update_q_table(state, action, reward, next_state=None):
     current_q = fetch_q_values(state)[action]
-    next_max_q = max(fetch_q_values(next_state).values())
-
-    new_q = current_q + ALPHA * (reward + GAMMA * next_max_q - current_q)
+    
+    # If next_state provided, use full Q-learning update
+    if next_state:
+        next_max_q = max(fetch_q_values(next_state).values())
+        new_q = current_q + ALPHA * (reward + GAMMA * next_max_q - current_q)
+    else:
+        # Simple reward-based update (for feedback without next state)
+        new_q = current_q + ALPHA * reward
 
     # Upsert Q-value
     supabase.table(TABLE_NAME).upsert(
@@ -129,3 +122,12 @@ def update_q_table(state, action, reward, next_state):
 # --------------------------------------------------
 def get_q_values(state):
     return fetch_q_values(state)
+
+
+def get_q_table():
+    """
+    Retrieve entire Q-table from Supabase for monitoring.
+    Returns limited results to avoid performance issues.
+    """
+    response = supabase.table(TABLE_NAME).select("*").limit(100).execute()
+    return response.data

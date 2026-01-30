@@ -1,3 +1,13 @@
-SUPABASE_URL="https://jmkcjyeufdfptwnzceyj.supabase.co"
-SUPABASE_KEY="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Impta2NqeWV1ZmRmcHR3bnpjZXlqIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc2NDMzMzg5MywiZXhwIjoyMDc5OTA5ODkzfQ.MnjNVPIKt295DPzduh_81h8WYr3hRO5gkLFjty-ITpY"
+from supabase import create_client
+from dotenv import load_dotenv
+import os
+
+load_dotenv()
+
+SUPABASE_URL = os.getenv("SUPABASE_URL")
+SUPABASE_KEY = os.getenv("SUPABASE_SERVICE_KEY")
+
+if not SUPABASE_URL or not SUPABASE_KEY:
+    raise RuntimeError("Supabase environment variables not set")
+
 supabase = create_client(SUPABASE_URL, SUPABASE_KEY)

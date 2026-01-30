@@ -47,4 +47,4 @@ def calculate_regret(action_taken, actual_outcome, data):
     if disease_risk == "high" and action_taken == 1:
         regret += 1.0
 
-    return regret
+    return float(regret)

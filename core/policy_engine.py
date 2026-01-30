@@ -1,18 +1,7 @@
-from supabase import create_client
-from dotenv import load_dotenv
-import os
-
-# --------------------------------------------------
-# ENV + SUPABASE CLIENT
-# --------------------------------------------------
-load_dotenv()
-
-SUPABASE_URL = os.getenv("SUPABASE_URL")
-SUPABASE_KEY = os.getenv("SUPABASE_SERVICE_KEY")
-
-supabase = create_client(SUPABASE_URL, SUPABASE_KEY)
+from core.supabase_client import supabase
 
 TABLE_NAME = "policy_penalties"
+
 
 
 # --------------------------------------------------
@@ -134,4 +123,5 @@ def _log_penalty(data, action, penalty, rule, explanation):
         "policy_rule": rule,
         "explanation": explanation
     }).execute()
+
 
