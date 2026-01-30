@@ -17,19 +17,19 @@ def recommend_fertilizer(data):
 
     # ---------------- WHEAT ----------------
     if crop == "wheat":
-        if stage == "cri" and n < 120:
+        if stage == "CRI" and n < 120:
             recommendation = "Nitrogen (Urea)"
             quantity = 25
             reason = "Nitrogen deficiency during CRI stage reduces tillering"
 
-        elif stage == "tillering" and n < 100:
+        elif stage == "Tillering" and n < 100:
             recommendation = "Nitrogen (Urea)"
             quantity = 20
             reason = "Additional nitrogen supports vegetative growth"
 
     # ---------------- RICE ----------------
     if crop == "rice":
-        if stage in ["tillering", "panicle_initiation"] and n < 100:
+        if stage in ["Tillering", "Flowering"] and n < 100:
             recommendation = "Nitrogen (Urea)"
             quantity = 30
             reason = "Nitrogen is critical during active vegetative growth in rice"
@@ -41,7 +41,7 @@ def recommend_fertilizer(data):
 
     # ---------------- MAIZE ----------------
     if crop == "maize":
-        if stage == "knee_high" and n < 120:
+        if stage == "Vegetative" and n < 120:
             recommendation = "Nitrogen (Urea)"
             quantity = 30
             reason = "Maize requires nitrogen during rapid vegetative growth"

@@ -11,29 +11,29 @@ def recommend_next_crop(crop, crop_journey):
     # -------------------------------
     rotation_rules = {
         "rice": {
-            "recommended": ["pulses", "wheat"],
+            "recommended": ["pulses", "maize"],
             "avoid": ["rice"],
-            "reason": "Rice depletes nitrogen and encourages waterborne diseases"
+            "reason": "Rice depletes nitrogen; rotating with pulses restores it, maize breaks pest cycle"
         },
         "wheat": {
-            "recommended": ["pulses", "maize"],
+            "recommended": ["rice", "maize"],
             "avoid": ["wheat"],
-            "reason": "Continuous wheat increases soil fatigue and rust risk"
+            "reason": "Rotating wheat with rice or maize prevents soil fatigue and reduces rust risk"
         },
         "maize": {
             "recommended": ["pulses", "wheat"],
             "avoid": ["maize"],
-            "reason": "Maize benefits from nitrogen-fixing legumes"
+            "reason": "Maize benefits from nitrogen-fixing legumes like pulses"
         },
         "pulses": {
-            "recommended": ["wheat", "maize", "rice"],
+            "recommended": ["rice", "wheat", "maize"],
             "avoid": [],
-            "reason": "Pulses improve soil nitrogen"
+            "reason": "Pulses improve soil nitrogen for cereal crops"
         },
         "sugarcane": {
             "recommended": ["pulses"],
             "avoid": ["sugarcane"],
-            "reason": "Sugarcane heavily depletes soil nutrients"
+            "reason": "Sugarcane heavily depletes soil; pulse rotation is essential for recovery"
         }
     }
 

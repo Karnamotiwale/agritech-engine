@@ -27,6 +27,16 @@ def generate_pest_disease_advisory(data):
                 "High disease risk detected. Inspect leaves for blight symptoms."
             )
 
+        if crop == "sugarcane":
+            advisories.append(
+                "High disease risk detected. Check for red rot or smut signs."
+            )
+
+        if crop == "pulses":
+            advisories.append(
+                "High disease risk detected. Monitor for wilt or blight."
+            )
+
     elif disease_risk == "medium":
         advisories.append(
             "Moderate disease risk. Regular field scouting is recommended."
@@ -53,6 +63,16 @@ def generate_pest_disease_advisory(data):
             advisories.append(
                 "High pest risk detected. Inspect crop for fall armyworm damage."
             )
+        
+        if crop == "sugarcane":
+            advisories.append(
+                "High pest risk detected. Monitor for pyrilla or borers."
+            )
+
+        if crop == "pulses":
+            advisories.append(
+                "High pest risk detected. Watch for pod borers."
+            )
 
     elif pest_risk == "medium":
         advisories.append(
@@ -65,7 +85,7 @@ def generate_pest_disease_advisory(data):
         )
 
     # ---------------- STAGE-SPECIFIC NOTE ----------------
-    if stage in ["flowering", "tasseling", "silking"]:
+    if stage in ["Flowering", "Tasseling", "Grain filling", "Pod filling"]:
         advisories.append(
             "Critical growth stage. Pest and disease stress can significantly impact yield."
         )

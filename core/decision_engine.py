@@ -35,25 +35,29 @@ def decide_action(ml_prediction, data):
     if data["crop"] == "pulses" and data["soil_moisture_pct"] > 60:
         return {
             "decision": 0,
-            "reason": "Pulses are sensitive to waterlogging"
+            "reason": "Pulses reached threshold (sensitive to waterlogging)"
+        }
+    
+    if data["crop"] == "sugarcane" and data["soil_moisture_pct"] < 30:
+        return {
+            "decision": 1,
+            "reason": "Sugarcane requires high moisture; currently below 30%"
         }
 
     # RULE 4: Critical growth stages favor irrigation
     critical_stages = [
-        "transplanting",
-        "tillering",
-        "panicle_initiation",
-        "flowering",
-        "cri",
-        "tasseling",
-        "silking"
+        "Transplanting", "Tillering", "Flowering", # Rice
+        "CRI", "Tillering", "Flowering", # Wheat
+        "Tasseling", "Grain filling", # Maize
+        "Grand growth", # Sugarcane
+        "Pod filling" # Pulses
     ]
 
-    if data["growth_stage"] in critical_stages:
+    if data.get("growth_stage") in critical_stages:
         if is_action_allowed(rl_action, data):
             return {
                 "decision": rl_action,
-                "reason": f"Critical growth stage: {data['growth_stage']}"
+                "reason": f"Critical growth stage: {data.get('growth_stage')}"
             }
 
     # ---------------- RL DECISION ----------------

@@ -31,7 +31,7 @@ def plan_irrigation(data, final_decision):
 
     # ---------------- RICE ----------------
     if crop == "rice":
-        if stage in ["transplanting", "tillering"]:
+        if stage in ["Transplanting", "Tillering"]:
             water_mm = 50
             next_days = 4
             reason = "Rice requires standing water during early stages"
@@ -42,10 +42,10 @@ def plan_irrigation(data, final_decision):
 
     # ---------------- MAIZE ----------------
     if crop == "maize":
-        if stage in ["tasseling", "silking"]:
+        if stage in ["Tasseling", "Grain filling"]:
             water_mm = 45
             next_days = 5
-            reason = "High water demand during tasseling and silking"
+            reason = "High water demand during tasseling and grain filling"
         else:
             water_mm = 30
             next_days = 7

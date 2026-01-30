@@ -1,12 +1,16 @@
 crop,soil_moisture_pct,temperature_c,humidity_pct,rainfall_mm,soil_ph,nitrogen_kg_ha,phosphorus_kg_ha,potassium_kg_ha,growth_stage,disease_risk,pest_risk,irrigation_required
-rice,75,30,85,120,6.5,100,50,50,tillering,low,medium,1
-rice,65,34,78,40,6.2,90,45,45,panicle_initiation,medium,high,1
-rice,85,28,90,180,6.8,110,55,55,flowering,low,low,0
-wheat,55,22,60,30,6.8,120,55,45,cri,low,medium,1
-wheat,65,25,58,20,7.0,130,60,50,grain_filling,low,low,0
-maize,50,29,55,25,6.5,140,60,40,knee_high,medium,high,1
-maize,60,27,65,80,6.2,130,60,40,tasseling,low,medium,0
-sugarcane,70,32,75,150,7.0,250,115,115,vegetative,medium,low,1
-sugarcane,80,30,78,220,6.8,250,115,115,elongation,low,low,0
-pulses,45,26,50,20,6.5,20,40,20,flowering,medium,medium,1
-pulses,55,24,55,60,6.8,20,40,20,pod_fill,low,low,0
+rice,45,28,80,5,7.0,100,50,40,Tillering,low,low,1
+rice,75,30,85,20,7.0,100,50,40,Flowering,low,low,0
+wheat,35,22,60,0,6.8,120,55,45,CRI,low,low,1
+wheat,55,25,65,5,6.8,120,55,45,Tillering,low,low,0
+maize,40,32,70,0,6.5,120,60,50,Vegetative,low,low,1
+maize,65,30,75,10,6.5,120,60,50,Tasseling,low,low,0
+sugarcane,30,35,75,0,7.0,150,80,60,Sprouting,low,low,1
+sugarcane,70,33,80,15,7.0,150,80,60,Grand growth,low,low,0
+pulses,40,25,60,0,6.5,30,40,50,Seedling,low,low,1
+pulses,65,27,65,5,6.5,30,40,50,Pod filling,low,low,0
+rice,40,29,82,2,7.1,95,48,38,Nursery,medium,low,1
+wheat,45,20,58,0,6.9,115,52,42,Germination,low,medium,1
+maize,42,31,72,0,6.6,118,58,48,Germination,low,low,1
+sugarcane,35,34,78,0,7.1,145,75,55,Tillering,medium,low,1
+pulses,38,24,62,0,6.4,28,38,48,Vegetative,low,medium,1
