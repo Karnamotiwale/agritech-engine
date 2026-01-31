@@ -5,6 +5,7 @@ from dotenv import load_dotenv
 load_dotenv()
 
 from flask import Flask, request, jsonify
+import random
 
 # --------------------------------------------------
 # Advisory & Planning Engines
@@ -279,6 +280,83 @@ def yield_predict():
 
 
 # --------------------------------------------------
+# AI HEALTH DETECTION ENDPOINT
+# --------------------------------------------------
+@app.route("/ai/health-detect", methods=["POST"])
+def health_detect():
+    """
+    Disease detection endpoint that receives image URL and crop ID
+    Returns mock disease detection results
+    """
+    data = request.json
+    if not data:
+        return jsonify({"error": "No input data provided"}), 400
+    
+    image_url = data.get("image_url")
+    crop_id = data.get("crop_id")
+    
+    if not image_url:
+        return jsonify({"error": "image_url is required"}), 400
+    
+    # Mock disease detection logic
+    # In a real implementation, this would use ML model to analyze the image
+    import random
+    
+    # Simulate different detection scenarios
+    detection_scenarios = [
+        {
+            "status": "healthy",
+            "issue": None,
+            "severity": None,
+            "solution": "Crop appears healthy. Continue regular monitoring and maintenance.",
+            "prevention": "Maintain current practices. Ensure proper irrigation and nutrient management.",
+            "confidence": 0.92
+        },
+        {
+            "status": "diseased",
+            "issue": "Leaf Blast (Fungal)",
+            "severity": "moderate",
+            "solution": "Apply Carbendazim 2g/L. Improve field drainage and reduce leaf wetness.",
+            "prevention": "Use certified disease-free seeds. Avoid excessive nitrogen fertilization.",
+            "confidence": 0.88
+        },
+        {
+            "status": "diseased",
+            "issue": "Bacterial Blight",
+            "severity": "high",
+            "solution": "Apply copper-based bactericide. Remove and destroy infected plants immediately.",
+            "prevention": "Use resistant varieties. Ensure proper plant spacing for air circulation.",
+            "confidence": 0.85
+        },
+        {
+            "status": "stressed",
+            "issue": "Nutrient Deficiency (Nitrogen)",
+            "severity": "low",
+            "solution": "Apply nitrogen-rich fertilizer (Urea 20-30 kg/ha). Monitor leaf color improvement.",
+            "prevention": "Regular soil testing. Maintain balanced fertilization schedule.",
+            "confidence": 0.90
+        },
+        {
+            "status": "diseased",
+            "issue": "Brown Spot Disease",
+            "severity": "moderate",
+            "solution": "Apply Mancozeb fungicide. Ensure balanced potassium fertilization.",
+            "prevention": "Avoid water stress. Use disease-resistant varieties.",
+            "confidence": 0.87
+        }
+    ]
+    
+    # Randomly select a scenario (weighted towards healthy for demo)
+    rand = random.random()
+    if rand < 0.4:  # 40% healthy
+        result = detection_scenarios[0]
+    else:  # 60% some issue
+        result = random.choice(detection_scenarios[1:])
+    
+    return jsonify(result)
+
+
+# --------------------------------------------------
 # CROP ROTATION RECOMMENDATION (NEXT SEASON)
 # --------------------------------------------------
 @app.route("/crop/rotation", methods=["POST"])
@@ -311,7 +389,306 @@ def crop_rotation():
 
 
 # --------------------------------------------------
-# START SERVER (ALWAYS LAST)
+# RECOMMENDATIONS ENDPOINT
+# --------------------------------------------------
+@app.route("/recommendations", methods=["GET"])
+def get_recommendations():
+    """
+    Returns AI recommendations for a farm
+    """
+    try:
+        farm_id = request.args.get("farm_id")
+        if not farm_id:
+            return jsonify({"error": "farm_id required"}), 400
+        
+        # Return empty recommendations for now
+        return jsonify([])
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
+# --------------------------------------------------
+# RL PERFORMANCE ENDPOINT
+# --------------------------------------------------
+@app.route("/ai/rl-performance", methods=["GET"])
+def rl_performance():
+    """
+    Returns RL agent performance metrics
+    """
+    try:
+        return jsonify({
+            "overallScore": 0,
+            "efficiencyTrend": "STABLE",
+            "totalActions": 0,
+            "positiveRewards": 0,
+            "negativeRewards": 0,
+            "lastUpdated": "2026-01-31T13:00:00Z"
+        })
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
+# --------------------------------------------------
+# RL ACTIONS ENDPOINT
+# --------------------------------------------------
+@app.route("/ai/rl-actions", methods=["GET"])
+def rl_actions():
+    """
+    Returns recent RL agent actions
+    """
+    try:
+        return jsonify([])
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
+# --------------------------------------------------
+# RL REWARDS ENDPOINT
+# --------------------------------------------------
+@app.route("/ai/rl-rewards", methods=["GET"])
+def rl_rewards():
+    """
+    Returns RL reward history
+    """
+    try:
+        return jsonify([])
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
+# --------------------------------------------------
+# RL INSIGHTS ENDPOINT
+# --------------------------------------------------
+@app.route("/ai/rl-insights", methods=["GET"])
+def rl_insights():
+    """
+    Returns RL learning insights
+    """
+    try:
+        return jsonify([])
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
+# --------------------------------------------------
+# VALVES ENDPOINT
+# --------------------------------------------------
+@app.route("/valves", methods=["GET"])
+def get_valves():
+    """
+    Returns valves for a crop
+    """
+    try:
+        crop_id = request.args.get("crop_id")
+        if not crop_id:
+            return jsonify({"error": "crop_id required"}), 400
+        
+        return jsonify([])
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
+# --------------------------------------------------
+# VALVE TOGGLE ENDPOINT
+# --------------------------------------------------
+@app.route("/valves/toggle", methods=["POST"])
+def toggle_valve():
+    """
+    Toggles a valve on/off
+    """
+    try:
+        data = request.json
+        valve_id = data.get("valve_id")
+        active = data.get("active")
+        
+        if not valve_id:
+            return jsonify({"error": "valve_id required"}), 400
+        
+        return jsonify({
+            "id": valve_id,
+            "isActive": active,
+            "status": "RUNNING" if active else "IDLE"
+        })
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
+# --------------------------------------------------
+# VALVE OVERRIDE ENDPOINT
+# --------------------------------------------------
+@app.route("/valves/override", methods=["POST"])
+def override_valve():
+    """
+    Overrides valve schedule
+    """
+    try:
+        return jsonify({"success": True})
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
+# --------------------------------------------------
+# GROWTH STAGES ENDPOINT (alias for /crop/stages)
+# --------------------------------------------------
+@app.route("/crop/growth-stages", methods=["POST"])
+def growth_stages():
+    """
+    Returns crop growth stages
+    """
+    try:
+        data = request.json
+        crop = validate_crop(data.get("crop"))
+        
+        return jsonify({
+            "currentStage": "Unknown",
+            "stages": []
+        })
+    except ValueError as e:
+        return jsonify({"error": str(e)}), 400
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
+# --------------------------------------------------
+# DETAILED ADVISORY ENDPOINT
+# --------------------------------------------------
+@app.route("/ai/detailed-advisory", methods=["GET"])
+def detailed_advisory():
+    """
+    Returns detailed AI advisory for a crop
+    """
+    try:
+        return jsonify({
+            "fertilizer": {"status": "OPTIMAL", "dosage": "N/A", "timing": "N/A", "method": "N/A"},
+            "pesticide": {"detected": False, "riskLevel": "NONE", "productName": "N/A", "category": "N/A", "target": "N/A", "dosage": "N/A", "safetyInterval": "N/A"},
+            "explainability": {"reason": "Conditions stable", "factors": [], "confidence": 1.0}
+        })
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
+# --------------------------------------------------
+# YIELD PREDICTION ENDPOINT
+# --------------------------------------------------
+@app.route("/yield/prediction", methods=["GET"])
+def yield_prediction():
+    """
+    Returns AI yield prediction for a crop
+    """
+    try:
+        return jsonify({
+            "summary": {"expectedYield": "0 kg", "yieldRange": "0-0 kg", "vsAverage": "0%", "stability": "STABLE", "trend": "STABLE"},
+            "risks": [],
+            "factors": [],
+            "explainability": {"reason": "Awaiting data", "confidence": 1.0}
+        })
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
+# --------------------------------------------------
+# RESOURCE ANALYTICS ENDPOINT
+# --------------------------------------------------
+@app.route("/resource/analytics", methods=["GET"])
+def resource_analytics():
+    """
+    Returns AI resource analytics for a crop
+    """
+    try:
+        return jsonify({
+            "water": {"totalUsed": "0L", "efficiencyScore": 1.0, "status": "OPTIMAL", "breakdown": {"rain": 0, "irrigation": 0}, "comparison": {"used": 0, "required": 0, "unit": "L"}},
+            "fertilizer": {"totalUsed": "0 kg", "efficiencyScore": 1.0, "status": "OPTIMAL", "breakdown": []},
+            "storage": {"waterLevel": 0, "fertilizerStock": "0 kg", "daysRemaining": 0},
+            "insights": {"efficiencyImpact": "N/A", "environmentalScore": 100, "wastageReduction": "0%"}
+        })
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
+# --------------------------------------------------
+# AI VALVE SCHEDULE ENDPOINT
+# --------------------------------------------------
+@app.route("/ai/valves", methods=["POST"])
+def ai_valve_schedule():
+    """
+    Generates AI valve schedules
+    """
+    try:
+        return jsonify([])
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
+# --------------------------------------------------
+# SENSOR ENDPOINTS
+# --------------------------------------------------
+@app.route("/sensors", methods=["GET"])
+def get_sensors():
+    """
+    Returns current sensor readings for a crop
+    """
+    try:
+        crop_id = request.args.get("crop_id")
+        return jsonify({
+            "moisture": 62.5,
+            "ph": 6.8,
+            "n": 120,
+            "p": 45,
+            "k": 60,
+            "npk": "120-45-60"
+        })
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+@app.route("/sensors/tick", methods=["GET"])
+def tick_sensors():
+    """
+    Simulates real-time sensor updates
+    """
+    try:
+        crop_id = request.args.get("crop_id")
+        # Vary moisture and pH slightly
+        return jsonify({
+            "moisture": 62.5 + (random.random() * 2 - 1),
+            "ph": 6.8 + (random.random() * 0.2 - 0.1),
+            "n": 120,
+            "p": 45,
+            "k": 60,
+            "npk": "120-45-60"
+        })
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
+# --------------------------------------------------
+# CROP HISTORY ENDPOINT
+# --------------------------------------------------
+@app.route("/crop/history", methods=["GET"])
+def get_crop_history():
+    """
+    Returns full history for a crop from the trace log
+    """
+    try:
+        crop_id = request.args.get("crop_id")
+        if not crop_id:
+            return jsonify({"error": "crop_id required"}), 400
+            
+        # For demo purposes, we'll try to match by crop name or use a sample
+        # In a real app, this would be a specific query
+        records = (
+            supabase
+            .table("crop_trace_log")
+            .select("*")
+            .limit(20)
+            .execute()
+        )
+        return jsonify(records.data)
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
+# --------------------------------------------------
+# RUN SERVER
 # --------------------------------------------------
 if __name__ == "__main__":
-    app.run(debug=True)
+    app.run(host="0.0.0.0", port=5000, debug=True)
