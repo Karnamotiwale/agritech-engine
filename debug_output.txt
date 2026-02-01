@@ -1,0 +1,194 @@
+﻿python : Traceback 
+(most recent call 
+last):
+At line:1 char:1
++ python -m flask 
+--app api.app run 
+--port 5000 2>&1 | 
+Out-File -FilePa ...
++ ~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~
+    + CategoryInfo   
+           : NotSpe  
+  cified: (Traceba   
+ ck (most recent     
+call last)::Stri    
+ng) [], RemoteEx    
+ception
+    + FullyQualified 
+   ErrorId : Native  
+  CommandError
+ 
+  File "<frozen 
+runpy>", line 198, 
+in 
+_run_module_as_main
+  File "<frozen 
+runpy>", line 88, in 
+_run_code
+  File "C:\Users\shri
+n\AppData\Local\Progr
+ams\Python\Python313\
+Lib\site-packages\fla
+sk\__main__.py", 
+line 3, in <module>
+    main()
+    ~~~~^^
+  File "C:\Users\shri
+n\AppData\Local\Progr
+ams\Python\Python313\
+Lib\site-packages\fla
+sk\cli.py", line 
+1131, in main
+    cli.main()
+    ~~~~~~~~^^
+  File "C:\Users\shri
+n\AppData\Local\Progr
+ams\Python\Python313\
+Lib\site-packages\cli
+ck\core.py", line 
+1406, in main
+    rv = 
+self.invoke(ctx)
+  File "C:\Users\shri
+n\AppData\Local\Progr
+ams\Python\Python313\
+Lib\site-packages\cli
+ck\core.py", line 
+1873, in invoke
+    return _process_r
+esult(sub_ctx.command
+.invoke(sub_ctx))
+                     
+      ~~~~~~~~~~~~~~~
+~~~~~~~^^^^^^^^^
+  File "C:\Users\shri
+n\AppData\Local\Progr
+ams\Python\Python313\
+Lib\site-packages\cli
+ck\core.py", line 
+1269, in invoke
+    return ctx.invoke
+(self.callback, 
+**ctx.params)
+           ~~~~~~~~~~
+^^^^^^^^^^^^^^^^^^^^^
+^^^^^^^^
+  File "C:\Users\shri
+n\AppData\Local\Progr
+ams\Python\Python313\
+Lib\site-packages\cli
+ck\core.py", line 
+824, in invoke
+    return 
+callback(*args, 
+**kwargs)
+  File "C:\Users\shri
+n\AppData\Local\Progr
+ams\Python\Python313\
+Lib\site-packages\cli
+ck\decorators.py", 
+line 93, in new_func
+    return 
+ctx.invoke(f, obj, 
+*args, **kwargs)
+           ~~~~~~~~~~
+^^^^^^^^^^^^^^^^^^^^^
+^^^^
+  File "C:\Users\shri
+n\AppData\Local\Progr
+ams\Python\Python313\
+Lib\site-packages\cli
+ck\core.py", line 
+824, in invoke
+    return 
+callback(*args, 
+**kwargs)
+  File "C:\Users\shri
+n\AppData\Local\Progr
+ams\Python\Python313\
+Lib\site-packages\fla
+sk\cli.py", line 
+979, in run_command
+    raise e from None
+  File "C:\Users\shri
+n\AppData\Local\Progr
+ams\Python\Python313\
+Lib\site-packages\fla
+sk\cli.py", line 
+963, in run_command
+    app: 
+WSGIApplication = 
+info.load_app()  # 
+pyright: ignore
+                     
+      ~~~~~~~~~~~~~^^
+  File "C:\Users\shri
+n\AppData\Local\Progr
+ams\Python\Python313\
+Lib\site-packages\fla
+sk\cli.py", line 
+349, in load_app
+    app = locate_app(
+import_name, name)
+  File "C:\Users\shri
+n\AppData\Local\Progr
+ams\Python\Python313\
+Lib\site-packages\fla
+sk\cli.py", line 
+245, in locate_app
+    __import__(module
+_name)
+    ~~~~~~~~~~^^^^^^^
+^^^^^^
+  File "C:\Users\shri
+n\OneDrive\Desktop\Pr
+ojectAgri\agritech-en
+gine\api\app.py", 
+line 725, in <module>
+    @app.route("/crop
+/rotation", 
+methods=["POST"])
+     ~~~~~~~~~^^^^^^^
+^^^^^^^^^^^^^^^^^^^^^
+^^^^^^^^
+  File "C:\Users\shri
+n\AppData\Local\Progr
+ams\Python\Python313\
+Lib\site-packages\fla
+sk\sansio\scaffold.py
+", line 362, in 
+decorator
+    self.add_url_rule
+(rule, endpoint, f, 
+**options)
+    ~~~~~~~~~~~~~~~~~
+^^^^^^^^^^^^^^^^^^^^^
+^^^^^^^^^
+  File "C:\Users\shri
+n\AppData\Local\Progr
+ams\Python\Python313\
+Lib\site-packages\fla
+sk\sansio\scaffold.py
+", line 47, in 
+wrapper_func
+    return f(self, 
+*args, **kwargs)
+  File "C:\Users\shri
+n\AppData\Local\Progr
+ams\Python\Python313\
+Lib\site-packages\fla
+sk\sansio\app.py", 
+line 657, in 
+add_url_rule
+    raise 
+AssertionError(
+    ...<2 lines>...
+    )
+AssertionError: View 
+function mapping is 
+overwriting an 
+existing endpoint 
+function: 
+crop_rotation
