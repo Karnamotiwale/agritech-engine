@@ -1,33 +1,18 @@
 # Python
+venv/
 __pycache__/
 *.pyc
-*.pyo
-*.pyd
-*.sqlite3
 
-# Virtual environment
-venv/
-.env/
-
-# Environment variables
+# Environment
 .env
-.env.local
 
-# Logs
-*.log
-
-# OS files
-.DS_Store
-Thumbs.db
-
-# Node modules
-node_modules/
-
-# Build folders
+# Build
 dist/
 build/
 
-# IDE files
+# IDE
 .vscode/
 .idea/
-.vercel
+
+# AI Models
+models/cropnet/
