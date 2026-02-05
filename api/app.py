@@ -701,6 +701,112 @@ def analytics():
 
 
 # --------------------------------------------------
+# UNIFIED CROP DETAILS ENDPOINT (AI + STRESS + SENSORS)
+# --------------------------------------------------
+@app.route("/crop-details", methods=["POST"])
+def crop_details():
+    """
+    Unified endpoint that returns:
+    - AI irrigation decision
+    - Crop stress level
+    - AI explanation
+    """
+    try:
+        data = request.json
+        if not data:
+            return jsonify({"error": "No input data"}), 400
+
+        # Extract sensor values
+        soil = data.get("soil_moisture", 50)
+        temp = data.get("temperature", 25)
+        humidity = data.get("humidity", 60)
+        rain = data.get("rain_forecast", 0)
+
+        features = [[soil, temp, humidity, rain]]
+
+        # ML prediction
+        ml_prediction = 0
+        if ml_model:
+            try:
+                ml_prediction = ml_model.predict(features)[0]
+            except Exception as e:
+                print(f"ML prediction error: {e}")
+
+        # Decision engine
+        decision = decide_action(ml_prediction, data)
+
+        # Explanation
+        explanation = generate_explanation(
+            data,
+            ml_prediction,
+            decision["decision"]
+        )
+
+        # Simple crop stress logic
+        stress = "Low"
+        if soil < 25 and temp > 34:
+            stress = "High"
+        elif soil < 35 or temp > 32:
+            stress = "Medium"
+
+        return jsonify({
+            "final_decision": decision["decision"],
+            "explanation": explanation,
+            "crop_stress": stress,
+            "ml_prediction": int(ml_prediction),
+            "confidence": decision.get("confidence", 0.75)
+        })
+
+    except Exception as e:
+        return jsonify({"error": str(e)}), 400
+
+
+# --------------------------------------------------
+# DISEASE DETECTION ENDPOINT (STUB FOR NOW)
+# --------------------------------------------------
+@app.route("/detect-disease", methods=["POST"])
+def detect_disease():
+    """
+    Disease detection from crop image.
+    Currently returns mock data - integrate with actual ML model later.
+    """
+    try:
+        if 'image' not in request.files:
+            return jsonify({"error": "No image file provided"}), 400
+
+        file = request.files['image']
+        
+        # For now, return mock disease detection
+        # In production, this would:
+        # 1. Save the image temporarily
+        # 2. Run through a disease detection ML model
+        # 3. Return the prediction
+        
+        # Mock response
+        diseases = [
+            "Healthy",
+            "Leaf Blight",
+            "Powdery Mildew",
+            "Rust",
+            "Bacterial Spot"
+        ]
+        
+        import random
+        detected_disease = random.choice(diseases)
+        confidence = random.uniform(0.75, 0.95)
+        
+        return jsonify({
+            "disease": detected_disease,
+            "confidence": round(confidence, 2),
+            "status": "success",
+            "note": "Mock detection - integrate actual ML model"
+        })
+
+    except Exception as e:
+        return jsonify({"error": str(e)}), 400
+
+
+# --------------------------------------------------
 # RUN SERVER
 # --------------------------------------------------
 if __name__ == "__main__":
