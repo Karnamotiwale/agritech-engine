@@ -17,6 +17,7 @@ import random
 from core.fertilizer_engine import recommend_fertilizer
 from core.pest_disease_engine import generate_pest_disease_advisory
 from core.irrigation_planner import plan_irrigation
+from core.pesticide_recommendation_engine import get_pesticide_recommendation, get_stage_specific_advisory
 
 # --------------------------------------------------
 # Core AI Engines
@@ -434,6 +435,53 @@ def crop_rotation():
             "recommended_crop": "pulses",
             "confidence": "low",
             "reason": "System fallback due to processing error"
+        }), 200
+
+
+# --------------------------------------------------
+# PESTICIDE RECOMMENDATION ENDPOINT
+# --------------------------------------------------
+@app.route("/pesticide/recommend", methods=["POST"])
+def pesticide_recommend():
+    """
+    Intelligent pesticide recommendation based on:
+    1. Crop type
+    2. Detected disease or pest
+    3. Environmental sensor data
+    4. Crop growth stage
+    
+    Returns pesticide name, dosage, spray interval, and carbon impact
+    """
+    try:
+        data = request.json or {}
+        
+        # Extract parameters
+        crop = data.get("crop", "").lower()
+        disease = data.get("disease", "").lower()
+        pest = data.get("pest", "").lower()
+        growth_stage = data.get("growth_stage", "")
+        humidity = data.get("humidity", 0)
+        temperature = data.get("temperature", 0)
+        soil_moisture = data.get("soil_moisture", 0)
+        
+        # Get recommendation from engine
+        recommendation = get_pesticide_recommendation(data)
+        
+        # Add stage-specific advisory if available
+        stage_advisory = None
+        if crop and growth_stage:
+            stage_advisory = get_stage_specific_advisory(crop, growth_stage)
+        
+        # Add stage advisory to response
+        if stage_advisory and recommendation.get("status") != "error":
+            recommendation["stage_advisory"] = stage_advisory
+        
+        return jsonify(recommendation), 200
+        
+    except Exception as e:
+        return jsonify({
+            "status": "error",
+            "message": f"Pesticide recommendation failed: {str(e)}"
         }), 200
 
 
