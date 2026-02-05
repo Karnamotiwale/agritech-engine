@@ -25,7 +25,20 @@ from core.pesticide_recommendation_engine import get_pesticide_recommendation, g
 from core.ml_model import IrrigationMLModel
 from core.decision_engine import decide_action
 from core.regret_engine import calculate_regret
-from core.rl_engine import update_q_table, get_q_values, get_state
+from core.rl_engine import update_q_table, get_q_values, get_state, get_q_table
+
+# Mock policy state function as requested
+def get_policy_state():
+    return {
+        "epsilon": 0.1,
+        "learning_rate": 0.1,
+        "discount_factor": 0.9,
+        "penalties": {
+            "over_irrigation": 1.5,
+            "under_irrigation": 1.5,
+            "rain_waste": 2.0
+        }
+    }
 from core.xai_engine import generate_explanation
 from core.crop_rotation_engine import recommend_next_crop
 
@@ -675,6 +688,17 @@ def resource_analytics():
         }), 200
     except Exception as e:
         return jsonify({"error": str(e)}), 400
+
+# --------------------------------------------------
+# ANALYTICS DASHBOARD API
+# --------------------------------------------------
+@app.route("/analytics", methods=["GET"])
+def analytics():
+    return jsonify({
+        "policy_state": get_policy_state(),
+        "q_table": get_q_table()
+    })
+
 
 # --------------------------------------------------
 # RUN SERVER
