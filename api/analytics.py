@@ -26,11 +26,10 @@ def get_overview():
         return jsonify(analysis)
     except Exception as e:
         print(f"Analytics Error: {e}")
-        # Return fallback structure
         return jsonify({
-            "summary": predictor._get_fallback_trends()['summary'],
+            "summary": {},
             "error": str(e),
-            "status": "fallback"
+            "status": "error"
         })
 
 @analytics_bp.route('/range-forecast', methods=['GET'])
@@ -51,8 +50,9 @@ def get_forecast():
     except Exception as e:
         print(f"Forecast Error: {e}")
         return jsonify({
-            "forecast": predictor._generate_fallback_forecast(7),
-            "status": "fallback"
+            "forecast": [],
+            "status": "error",
+            "error": str(e)
         })
 
 @analytics_bp.route('/crop-health', methods=['GET'])
