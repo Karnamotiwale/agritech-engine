@@ -12,6 +12,15 @@ if not os.path.exists("models"):
 # Load dataset
 try:
     data = pd.read_csv("data/farm_data.csv")
+    # Rename columns to match model features
+    data = data.rename(columns={
+        "soil_moisture_pct": "soil_moisture",
+        "temperature_c": "temperature",
+        "humidity_pct": "humidity",
+        "rainfall_mm": "rain_forecast",
+        "irrigation_required": "irrigate"
+    })
+    print("Dataset loaded and columns mapped successfully.")
 except FileNotFoundError:
     print("Error: data/farm_data.csv not found.")
     # Create dummy data for testing if file missing (dev mode fallback)

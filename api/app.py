@@ -381,11 +381,48 @@ def health_detect():
     # rather than guessing/mocking.
     
     return jsonify({
-        "status": "analyzed",
-        "issue": None,
-        "confidence": 0.0,
-        "message": "AI Vision Model pending integration. No disease detected in basic heuristic check."
-    })
+        "status": "online",
+        "model_availability": "100%" if ml_model else "0%",
+        "db_connectivity": "Healthy" if db_ok else "Disconnected",
+        "data_freshness": "Real-time",
+        "last_sync": datetime.now().isoformat()
+    }), 200
+
+# --------------------------------------------------
+# CROP DISEASE DETECTION ENDPOINT (CropNet)
+# --------------------------------------------------
+from core.cropnet_engine import predict_crop_disease
+
+@app.route("/cropnet-detect", methods=["POST"])
+def cropnet_detect():
+    """
+    Detects crop disease from an uploaded image file.
+    """
+    try:
+        if "image" not in request.files:
+            return jsonify({"error": "No image file provided"}), 400
+            
+        file = request.files["image"]
+        if file.filename == "":
+            return jsonify({"error": "No selected file"}), 400
+
+        # Save temporarily
+        temp_path = "temp_crop_upload.jpg"
+        file.save(temp_path)
+
+        # Predict
+        result = predict_crop_disease(temp_path)
+        
+        # Cleanup (optional, depends on OS locking)
+        try:
+            os.remove(temp_path)
+        except:
+            pass # Windows might lock the file briefly
+
+        return jsonify(result), 200
+        
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
 
 
 # --------------------------------------------------
