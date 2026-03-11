@@ -62,7 +62,20 @@ CORS(app, resources={r"/*": {"origins": ["http://localhost:5173"]}}, supports_cr
 # REGISTER BLUEPRINTS
 # --------------------------------------------------
 from api.analytics import analytics_bp
+from api.ai_decision import ai_decision_bp
+from api.yield_prediction import yield_bp
+from api.disease_advice import disease_bp
+from api.chat import chat_bp
+from api.crop_rotation import rotation_bp
+from api.sustainability import sustainability_bp
+
 app.register_blueprint(analytics_bp, url_prefix='/api/analytics')
+app.register_blueprint(ai_decision_bp, url_prefix='/api')
+app.register_blueprint(yield_bp, url_prefix='/api')
+app.register_blueprint(disease_bp, url_prefix='/api')
+app.register_blueprint(chat_bp, url_prefix='/api')
+app.register_blueprint(rotation_bp, url_prefix='/api')
+app.register_blueprint(sustainability_bp, url_prefix='/api')
 
 # 2. Global Error Handler - Force JSON responses
 @app.errorhandler(Exception)

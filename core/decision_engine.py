@@ -1,3 +1,6 @@
+from core.openai_service import ask_ai
+import json
+
 from core.policy_engine import is_action_allowed
 from core.rl_engine import choose_action, get_state
 
@@ -5,72 +8,53 @@ from core.rl_engine import choose_action, get_state
 def decide_action(ml_prediction, data):
     """
     Decide whether irrigation is required (1 = Yes, 0 = No)
+    Uses OpenAI as the primary decision engine.
 
     data: dict with keys matching farm_data.csv columns
     """
-
-    # Build RL state from data
-    state = get_state(data)
-
-    # RL suggested action (0 or 1)
-    rl_action = choose_action(state)
-
-    # ---------------- RULE-BASED OVERRIDES ----------------
-
-    # RULE 1: Heavy rainfall → no irrigation
-    if data["rainfall_mm"] >= 80:
-        return {
-            "decision": 0,
-            "reason": "Recent heavy rainfall detected"
-        }
-
-    # RULE 2: Soil moisture already sufficient
-    if data["soil_moisture_pct"] >= 65:
-        return {
-            "decision": 0,
-            "reason": "Soil moisture is sufficient"
-        }
-
-    # RULE 3: Crop-specific safety rules
-    if data["crop"] == "pulses" and data["soil_moisture_pct"] > 60:
-        return {
-            "decision": 0,
-            "reason": "Pulses reached threshold (sensitive to waterlogging)"
-        }
+    prompt = f"""
+    Farm Data:
+    Crop: {data.get("crop", "Unknown")}
+    Soil Moisture (%): {data.get("soil_moisture_pct", 0)}
+    Nitrogen (N): {data.get("nitrogen", data.get("nitrogen_kg_ha", 0))}
+    Phosphorus (P): {data.get("phosphorus", data.get("phosphorus_kg_ha", 0))}
+    Potassium (K): {data.get("potassium", data.get("potassium_kg_ha", 0))}
+    Rain Forecast (mm): {data.get("rainfall", data.get("rainfall_mm", 0))}
     
-    if data["crop"] == "sugarcane" and data["soil_moisture_pct"] < 30:
+    Analyze the conditions. Should the farmer irrigate? Should they fertigate? 
+    Respond STRICTLY with valid JSON. Do not include markdown tags like ```json.
+    Format:
+    {{
+        "irrigation_needed": 1 or 0,
+        "fertigation_needed": 1 or 0,
+        "reasoning": "Detailed explanation of why this action is needed",
+        "confidence_explanation": "Explanation of your confidence in this decision based on the inputs"
+    }}
+    """
+    
+    try:
+        response_text = ask_ai(prompt)
+        response_text = response_text.replace("```json", "").replace("```", "").strip()
+        result = json.loads(response_text)
+        
         return {
-            "decision": 1,
-            "reason": "Sugarcane requires high moisture; currently below 30%"
+            "decision": result.get("irrigation_needed", 0),
+            "fertigation_needed": result.get("fertigation_needed", 0),
+            "reason": result.get("reasoning", "AI decision"),
+            "confidence": 0.9,
+            "confidence_explanation": result.get("confidence_explanation", "")
+        }
+    except Exception as e:
+        print(f"AI Decision Error: {e}")
+        # Build RL state from data
+        state = get_state(data)
+
+        # RL suggested action (0 or 1)
+        rl_action = choose_action(state)
+
+        # ---------------- FALLBACK ----------------
+        return {
+            "decision": int(ml_prediction),
+            "reason": "Fallback to ML prediction due to AI error."
         }
 
-    # RULE 4: Critical growth stages favor irrigation
-    critical_stages = [
-        "Transplanting", "Tillering", "Flowering", # Rice
-        "CRI", "Tillering", "Flowering", # Wheat
-        "Tasseling", "Grain filling", # Maize
-        "Grand growth", # Sugarcane
-        "Pod filling" # Pulses
-    ]
-
-    if data.get("growth_stage") in critical_stages:
-        if is_action_allowed(rl_action, data):
-            return {
-                "decision": rl_action,
-                "reason": f"Critical growth stage: {data.get('growth_stage')}"
-            }
-
-    # ---------------- RL DECISION ----------------
-
-    if is_action_allowed(rl_action, data):
-        return {
-            "decision": rl_action,
-            "reason": "RL policy selected action"
-        }
-
-    # ---------------- FALLBACK ----------------
-
-    return {
-        "decision": int(ml_prediction),
-        "reason": "Fallback to ML prediction"
-    }
