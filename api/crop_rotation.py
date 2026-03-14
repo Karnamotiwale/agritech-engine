@@ -1,5 +1,5 @@
 from flask import Blueprint, request, jsonify
-from core.gemini_service import ask_gemini
+
 import json
 
 rotation_bp = Blueprint('crop_rotation', __name__)
@@ -36,9 +36,21 @@ def crop_rotation():
     """
     
     try:
-        response_text = ask_gemini(prompt)
-        response_text = response_text.replace("```json", "").replace("```", "").strip()
-        result = json.loads(response_text)
+        last_crop = previous_crops[-1].lower() if previous_crops else "unknown"
+        if last_crop in ["wheat", "corn", "maize"]:
+            next_crop = "legumes"
+            reason = "Legumes fix nitrogen in the soil, which is depleted by cereal crops."
+        elif last_crop in ["legumes", "soybeans", "peas", "pulses"]:
+            next_crop = "wheat"
+            reason = "Cereal crops benefit from the nitrogen fixed by previous legume crops."
+        else:
+            next_crop = "cover crop"
+            reason = "A general cover crop helps restore soil health and prevent erosion."
+            
+        result = {
+            "next_crop": next_crop,
+            "soil_health_benefits_explanation": reason
+        }
         return jsonify(result), 200
     except Exception as e:
         return jsonify({"error": str(e)}), 500

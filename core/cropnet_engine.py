@@ -1,4 +1,4 @@
-from core.gemini_service import ask_gemini
+
 
 def predict_crop_disease(image_description):
 
@@ -16,6 +16,10 @@ Image description:
 {image_description}
 """
 
-    response = ask_gemini(prompt)
-
-    return response
+    import json
+    return json.dumps({
+        "Disease Name": "Unknown (Rule-based Placeholder)",
+        "Severity Level": "Medium",
+        "Recommended Treatment": "Apply general fungicide if symptoms spread.",
+        "Prevention Advice": "Maintain proper plant spacing and avoid over-watering."
+    })

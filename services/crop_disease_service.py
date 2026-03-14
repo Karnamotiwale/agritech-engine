@@ -1,11 +1,9 @@
 import os
-from google import genai
 from dotenv import load_dotenv
 from PIL import Image
+from core.gemini_client import generate_ai_response
 
 load_dotenv()
-
-client = genai.Client(api_key=os.getenv("GEMINI_API_KEY"))
 
 
 def analyze_crop_disease(image_path):
@@ -23,9 +21,6 @@ def analyze_crop_disease(image_path):
     Explain clearly so farmers can understand.
     """
 
-    response = client.models.generate_content(
-        model="gemini-2.0-flash",
-        contents=[prompt, img]
-    )
+    response = generate_ai_response(prompt, image=img)
 
-    return response.text
+    return response

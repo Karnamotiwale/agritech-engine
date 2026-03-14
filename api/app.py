@@ -749,6 +749,25 @@ def ai_status():
         return jsonify({"status": "error", "message": str(e)}), 200
 
 # --------------------------------------------------
+# GEMINI AI STATUS ENDPOINT
+# --------------------------------------------------
+@app.route("/ai/gemini-status", methods=["GET"])
+def gemini_status():
+    """
+    Returns specific status of the Gemini client implementation.
+    """
+    try:
+        from core.gemini_client import api_key, MIN_DELAY, gemini_lock
+        return jsonify({
+            "api_key_loaded": bool(api_key),
+            "model": "gemini-1.5-flash",
+            "request_lock": "active" if gemini_lock else "inactive",
+            "rate_limit_delay": f"{MIN_DELAY} seconds"
+        }), 200
+    except Exception as e:
+        return jsonify({"status": "error", "message": str(e)}), 200
+
+# --------------------------------------------------
 # DECISION LOG (Phase 3)
 # --------------------------------------------------
 @app.route("/ai/decision-log", methods=["GET"])

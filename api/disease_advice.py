@@ -1,5 +1,5 @@
 from flask import Blueprint, request, jsonify
-from core.gemini_service import ask_gemini
+
 import json
 
 disease_bp = Blueprint('disease_advice', __name__)
@@ -39,9 +39,11 @@ def disease_advice():
     """
     
     try:
-        response_text = ask_gemini(prompt)
-        response_text = response_text.replace("```json", "").replace("```", "").strip()
-        result = json.loads(response_text)
+        result = {
+            "recommended_pesticide": f"Standard treatment for {disease_name}",
+            "dosage_instructions": "Follow manufacturer's guidelines on the label.",
+            "prevention_advice": f"Ensure proper spacing and prune infected leaves to prevent {disease_name}."
+        }
         return jsonify(result), 200
     except Exception as e:
         return jsonify({"error": str(e)}), 500

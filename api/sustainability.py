@@ -1,5 +1,5 @@
 from flask import Blueprint, request, jsonify
-from core.gemini_service import ask_gemini
+
 import json
 
 sustainability_bp = Blueprint('sustainability', __name__)
@@ -40,9 +40,13 @@ def sustainability():
     """
     
     try:
-        response_text = ask_gemini(prompt)
-        response_text = response_text.replace("```json", "").replace("```", "").strip()
-        result = json.loads(response_text)
+        result = {
+            "carbon_footprint_reduction": f"Consider reducing chemical fertilizer ({fertilizer_usage}) through precision application.",
+            "sustainable_farming_practices": [
+                f"Optimize water usage (currently at {water_usage}) using automated drip irrigation.",
+                "Incorporate crop rotation to naturally replenish soil nutrients."
+            ]
+        }
         return jsonify(result), 200
     except Exception as e:
         return jsonify({"error": str(e)}), 500

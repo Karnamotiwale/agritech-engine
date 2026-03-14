@@ -1,6 +1,6 @@
 from core.yield_baseline import BASELINE_YIELD
 from core.yield_feature_engine import build_yield_features
-from core.gemini_service import ask_gemini
+
 import json
 
 def predict_yield(crop, journey):
@@ -29,16 +29,31 @@ def predict_yield(crop, journey):
     """
     
     try:
-        response_text = ask_gemini(prompt)
-        response_text = response_text.replace("```json", "").replace("```", "").strip()
-        result = json.loads(response_text)
+        baseline = BASELINE_YIELD.get(crop, {"min": 2, "max": 5})
+
+        # Start from mid baseline
+        expected_yield = (baseline["min"] + baseline["max"]) / 2
         
+        # Adjust based on historical events
+        expected_yield += irrigation_count * 0.1
+        expected_yield -= stress_events * 0.15
+        expected_yield -= disease_events * 0.2
+
+        # Clamp yield
+        expected_yield = max(baseline["min"], min(expected_yield, baseline["max"]))
+
+        confidence = "high"
+        if stress_events > 2 or disease_events > 1:
+            confidence = "medium"
+        if stress_events > 4:
+            confidence = "low"
+
         return {
-            "expected_yield_t_ha": result.get("expected_yield_t_ha", 0),
-            "confidence": "high" if stress_events == 0 else "medium",
+            "expected_yield_t_ha": round(expected_yield, 2),
+            "confidence": confidence,
             "drivers": features,
-            "risk_factors": result.get("possible_risk_factors", []),
-            "improvement_advice": result.get("improvement_suggestions", [])
+            "risk_factors": [f"{stress_events} stress events recorded", f"{disease_events} disease logs"],
+            "improvement_advice": ["Maintain steady irrigation", "Monitor for pests"] if confidence != "high" else ["Keep up current practices"]
         }
     except Exception as e:
         print(f"AI Yield Prediction Error: {e}")

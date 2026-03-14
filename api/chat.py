@@ -1,14 +1,16 @@
 from flask import Blueprint, request, jsonify
-from core.gemini_service import ask_gemini
-import json
+from core.gemini_client import ask_gemini
 
-chat_bp = Blueprint('farmer_chat', __name__)
+chat_bp = Blueprint("chat_bp", __name__)
 
-@chat_bp.route('/farmerChat', methods=['POST'])
-def farmer_chat():
+@chat_bp.route("/chat", methods=["POST"])
+def chat():
     """
-    AI chatbot for farmers
+    Farmer Advisory Chatbot
     ---
+    tags:
+      - Advisory AI
+      
     parameters:
       - name: body
         in: body
@@ -16,25 +18,52 @@ def farmer_chat():
         schema:
           type: object
           properties:
-            question:
+            message:
               type: string
-              example: "How do I deal with aphids?"
+              example: "How can I improve soil fertility?"
+              
     responses:
       200:
-        description: Chatbot response
+        description: AI advisory response
+        schema:
+          type: object
+          properties:
+            response:
+              type: string
     """
-    data = request.json or {}
-    question = data.get("question", "")
+    data = request.json
     
-    prompt = f"""
-    The farmer asks: "{question}"
+    if not data or "message" not in data:
+        return jsonify({"error": "Message is required"}), 400
+        
+    message = data["message"]
     
-    Answer the question as an expert agricultural assistant. Provide a direct, helpful, and concise response.
-    Respond simply with plain text or markdown (no JSON required unless you want, but simple text is best for chat).
+    system_prompt = f"""
+    You are an expert agricultural advisor helping farmers.
+    Answer in simple language suitable for farmers.
+    
+    Question:
+    {message}
+    
+    Provide:
+    • practical advice
+    • crop recommendations
+    • fertilizer suggestions if relevant
+    • prevention tips if disease related
     """
     
+    response_text = ask_gemini(system_prompt)
+    
+    # Optional: Log Chat History to Supabase
     try:
-        response_text = ask_gemini(prompt)
-        return jsonify({"answer": response_text}), 200
+        from core.supabase_client import supabase
+        supabase.table("advisory_chat_logs").insert({
+            "user_message": message,
+            "ai_response": response_text
+        }).execute()
     except Exception as e:
-        return jsonify({"error": str(e)}), 500
+        print(f"Warning: Failed to log chat to Supabase: {e}")
+    
+    return jsonify({
+        "response": response_text
+    })
