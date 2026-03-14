@@ -5,6 +5,26 @@ ai_decision_bp = Blueprint('ai_decision', __name__)
 
 @ai_decision_bp.route('/irrigationDecision', methods=['POST'])
 def irrigation_decision():
+    """
+    Irrigation AI prediction
+    ---
+    parameters:
+      - name: body
+        in: body
+        required: true
+        schema:
+          type: object
+          properties:
+            soil_moisture_pct:
+              type: number
+            temperature_c:
+              type: number
+            humidity_pct:
+              type: number
+    responses:
+      200:
+        description: Irrigation decision and prediction
+    """
     data = request.json or {}
     try:
         # Reusing the upgraded decide_action which now utilizes ask_ai

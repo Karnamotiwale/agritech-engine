@@ -1,6 +1,6 @@
 from core.yield_baseline import BASELINE_YIELD
 from core.yield_feature_engine import build_yield_features
-from core.openai_service import ask_ai
+from core.gemini_service import ask_gemini
 import json
 
 def predict_yield(crop, journey):
@@ -29,7 +29,7 @@ def predict_yield(crop, journey):
     """
     
     try:
-        response_text = ask_ai(prompt)
+        response_text = ask_gemini(prompt)
         response_text = response_text.replace("```json", "").replace("```", "").strip()
         result = json.loads(response_text)
         

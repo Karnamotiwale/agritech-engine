@@ -5,6 +5,20 @@ yield_bp = Blueprint('yield_prediction', __name__)
 
 @yield_bp.route('/yieldPrediction', methods=['POST'])
 def yield_prediction():
+    """
+    Predict Crop Yield
+    ---
+    tags:
+      - Prediction
+    parameters:
+      - in: body
+        name: body
+        schema:
+          type: object
+    responses:
+      200:
+        description: Successful response
+    """
     data = request.json or {}
     try:
         crop = data.get("crop", "unknown")

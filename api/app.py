@@ -5,7 +5,9 @@ import os
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from dotenv import load_dotenv
-load_dotenv()
+import os
+
+load_dotenv(os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), ".env"))
 
 from flask import Flask, request, jsonify
 from flask_cors import CORS
@@ -53,8 +55,9 @@ from core.crop_constants import ALLOWED_CROPS, CROP_LIFECYCLES, validate_crop, s
 # --------------------------------------------------
 # Flask app
 # --------------------------------------------------
+from flasgger import Swagger
 app = Flask(__name__)
-# 1. Enable CORS for frontend
+swagger = Swagger(app)
 # 1. Enable CORS for frontend
 CORS(app, resources={r"/*": {"origins": ["http://localhost:5173"]}}, supports_credentials=True)
 
@@ -68,6 +71,12 @@ from api.disease_advice import disease_bp
 from api.chat import chat_bp
 from api.crop_rotation import rotation_bp
 from api.sustainability import sustainability_bp
+from api.crop_disease_detection import crop_disease_bp
+from api.sensor_controller import sensor_api
+from api.valve_controller import valve_api
+from api.farm_controller import farm_api
+import threading
+from core.auto_irrigation_worker import run_loop
 
 app.register_blueprint(analytics_bp, url_prefix='/api/analytics')
 app.register_blueprint(ai_decision_bp, url_prefix='/api')
@@ -76,6 +85,14 @@ app.register_blueprint(disease_bp, url_prefix='/api')
 app.register_blueprint(chat_bp, url_prefix='/api')
 app.register_blueprint(rotation_bp, url_prefix='/api')
 app.register_blueprint(sustainability_bp, url_prefix='/api')
+app.register_blueprint(crop_disease_bp, url_prefix='/api')
+app.register_blueprint(sensor_api)
+app.register_blueprint(valve_api)
+app.register_blueprint(farm_api)
+
+# Start background auto-irrigation worker
+worker_thread = threading.Thread(target=run_loop, daemon=True)
+worker_thread.start()
 
 # 2. Global Error Handler - Force JSON responses
 @app.errorhandler(Exception)
@@ -105,6 +122,13 @@ except Exception as e:
 # --------------------------------------------------
 @app.route("/", methods=["GET"])
 def health():
+    """
+    Backend status check
+    ---
+    responses:
+      200:
+        description: System health status
+    """
     return jsonify({
         "status": "ok",
         "message": "AI engine is running (XGBoost Active)"
@@ -116,6 +140,15 @@ def health():
 # --------------------------------------------------
 @app.route("/model-metrics", methods=["GET"])
 def model_metrics_endpoint():
+    """
+    Get AI Model Metrics
+    ---
+    tags:
+      - Metrics
+    responses:
+      200:
+        description: Returns accuracy and precision of the XGBoost model
+    """
     return jsonify({
         "accuracy": model_metrics.get("accuracy", 0.88),
         "precision": model_metrics.get("precision", 0.91)
@@ -126,6 +159,32 @@ def model_metrics_endpoint():
 # --------------------------------------------------
 @app.route("/decide", methods=["POST"])
 def decide():
+    """
+    Smart agricultural decisions
+    ---
+    parameters:
+      - name: body
+        in: body
+        required: true
+        schema:
+          type: object
+          properties:
+            crop:
+              type: string
+            soil_moisture_pct:
+              type: number
+            temperature_c:
+              type: number
+            humidity_pct:
+              type: number
+            disease_risk_score:
+              type: number
+            pest_risk_score:
+              type: number
+    responses:
+      200:
+        description: Comprehensive agricultural decision
+    """
     data = request.json
     if not data:
         return jsonify({"error": "No input data provided"}), 400
@@ -248,6 +307,21 @@ def decide():
 # --------------------------------------------------
 @app.route("/feedback", methods=["POST"])
 def feedback():
+    """
+    Submit feedback on irrigation decisions
+    ---
+    tags:
+      - AI Decision
+    parameters:
+      - in: body
+        name: body
+        required: true
+        schema:
+          type: object
+    responses:
+      200:
+        description: Successful response updating RL agent
+    """
     body = request.json
     if not body:
         return jsonify({"error": "No input body"}), 400
@@ -280,6 +354,23 @@ def feedback():
 # --------------------------------------------------
 @app.route("/crop/journey", methods=["POST"])
 def crop_journey():
+    """
+    Get full crop tracing history
+    ---
+    tags:
+      - Crop Lifecycle
+    parameters:
+      - in: body
+        name: body
+        schema:
+          type: object
+          properties:
+            crop:
+              type: string
+    responses:
+      200:
+        description: Successful response returning trace log
+    """
     try:
         crop = validate_crop(request.json.get("crop"))
     except ValueError as e:
@@ -307,6 +398,25 @@ def crop_journey():
 # --------------------------------------------------
 @app.route("/crop/stages", methods=["POST"])
 def crop_stages():
+    """
+    Get crop lifecycle stages
+    ---
+    tags:
+      - Crop Lifecycle
+    parameters:
+      - in: body
+        name: body
+        schema:
+          type: object
+          properties:
+            crop:
+              type: string
+            days_since_sowing:
+              type: integer
+    responses:
+      200:
+        description: Successful response
+    """
     try:
         crop = validate_crop(request.json.get("crop"))
     except ValueError as e:
@@ -348,6 +458,23 @@ def crop_stages():
 # --------------------------------------------------
 @app.route("/yield/predict", methods=["POST"])
 def yield_predict():
+    """
+    Predict yield trend based on latest sensor data and crop history
+    ---
+    tags:
+      - Prediction
+    parameters:
+      - in: body
+        name: body
+        schema:
+          type: object
+          properties:
+            crop:
+              type: string
+    responses:
+      200:
+        description: Successful response
+    """
     try:
         crop = validate_crop(request.json.get("crop"))
     except ValueError as e:
@@ -404,12 +531,13 @@ def health_detect():
 # --------------------------------------------------
 # CROP DISEASE DETECTION ENDPOINT (CropNet)
 # --------------------------------------------------
-from core.cropnet_engine import predict_crop_disease
+from services.crop_disease_service import analyze_crop_disease
+import json
 
 @app.route("/cropnet-detect", methods=["POST"])
 def cropnet_detect():
     """
-    Detects crop disease from an uploaded image file.
+    Detects crop disease from an uploaded image file using OpenAI Vision.
     """
     try:
         if "image" not in request.files:
@@ -424,7 +552,7 @@ def cropnet_detect():
         file.save(temp_path)
 
         # Predict
-        result = predict_crop_disease(temp_path)
+        result = analyze_crop_disease(temp_path)
         
         # Cleanup (optional, depends on OS locking)
         try:
@@ -432,7 +560,13 @@ def cropnet_detect():
         except:
             pass # Windows might lock the file briefly
 
-        return jsonify(result), 200
+        # Parse the JSON string back to dict for jsonify
+        try:
+            parsed_result = json.loads(result)
+        except:
+            parsed_result = {"analysis": result}
+
+        return jsonify(parsed_result), 200
         
     except Exception as e:
         return jsonify({"error": str(e)}), 500
@@ -443,6 +577,20 @@ def cropnet_detect():
 # --------------------------------------------------
 @app.route("/crop/rotation", methods=["POST"])
 def crop_rotation():
+    """
+    Recommend next crop for rotation
+    ---
+    tags:
+      - Agronomy
+    parameters:
+      - in: body
+        name: body
+        schema:
+          type: object
+    responses:
+      200:
+        description: Successful response
+    """
     try:
         # 1. Flexible Input Handling (Requirement 1)
         data = request.json or {}
@@ -585,7 +733,7 @@ def ai_status():
         # Check database connectivity
         db_ok = False
         try:
-            supabase.table("sensor_logs").select("count", count="exact").limit(1).execute()
+            supabase.table("sensor_readings").select("count", count="exact").limit(1).execute()
             db_ok = True
         except Exception:
             db_ok = False
@@ -705,10 +853,10 @@ def get_sensors():
         
         # Fetch latest sensor reading from Supabase
         # In a real app we would filter by crop_id or farm_id
-        # query = supabase.table("sensor_logs").select("*").eq('crop_id', crop_id) ...
+        # query = supabase.table("sensor_readings").select("*").eq('crop_id', crop_id) ...
         
         response = (
-            supabase.table("sensor_logs")
+            supabase.table("sensor_readings")
             .select("*")
             .order("created_at", desc=True)
             .limit(1)
@@ -753,6 +901,12 @@ def get_sensors():
 def resource_analytics():
     """
     Returns resource usage and efficiency metrics.
+    ---
+    tags:
+      - Analytics
+    responses:
+      200:
+        description: Successful response
     """
     try:
         # Simulate calculation based on crop
@@ -818,10 +972,18 @@ def analytics():
 @app.route("/crop-details", methods=["POST"])
 def crop_details():
     """
-    Unified endpoint that returns:
-    - AI irrigation decision
-    - Crop stress level
-    - AI explanation
+    Unified endpoint that returns AI decision and crop stress level
+    ---
+    tags:
+      - Dashboard
+    parameters:
+      - in: body
+        name: body
+        schema:
+          type: object
+    responses:
+      200:
+        description: Successful response
     """
     try:
         data = request.json
@@ -917,6 +1079,52 @@ def detect_disease():
     except Exception as e:
         return jsonify({"error": str(e)}), 400
 
+
+# --------------------------------------------------
+# SYSTEM DIAGNOSTICS ENDPOINT (STEP 8)
+# --------------------------------------------------
+@app.route("/system/diagnostics", methods=["GET"])
+def system_diagnostics():
+    """
+    System Diagnostics
+    ---
+    tags:
+      - Diagnostics
+    responses:
+      200:
+        description: Full system diagnostic report
+    """
+    from datetime import datetime
+    
+    # 1. API routes
+    route_count = len([rule for rule in app.url_map.iter_rules()])
+    
+    # 2. DB Connectivity
+    db_ok = False
+    try:
+        supabase.table("sensor_readings").select("*").limit(1).execute()
+        db_ok = True
+    except Exception as e:
+        print(f"System Diagnostisc Supabase error: {e}")
+        db_ok = False
+        
+    # 3. AI Model
+    ai_status = "loaded" if ml_model else "failed"
+    
+    # 4. Worker status
+    worker_status = "running" if worker_thread and worker_thread.is_alive() else "stopped"
+    
+    # 5. Sensor Pipeline
+    pipeline_status = "healthy" if db_ok and ai_status == "loaded" else "failing"
+    
+    return jsonify({
+        "api_routes": route_count,
+        "database": "connected" if db_ok else "disconnected",
+        "ai_model": ai_status,
+        "worker_status": worker_status,
+        "sensor_pipeline": pipeline_status,
+        "timestamp": datetime.now().isoformat()
+    })
 
 # --------------------------------------------------
 # RUN SERVER

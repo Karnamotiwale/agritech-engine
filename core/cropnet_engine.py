@@ -1,57 +1,21 @@
-import numpy as np
-from PIL import Image
-try:
-    import tensorflow as tf
-except ImportError:
-    tf = None
+from core.gemini_service import ask_gemini
 
-MODEL_PATH = "models/cropnet/plant_disease_model.h5"
+def predict_crop_disease(image_description):
 
-# Load model once
-try:
-    if tf:
-        model = tf.keras.models.load_model(MODEL_PATH)
-        print("CropNet Model Loaded Successfully")
-    else:
-        model = None
-        print("TensorFlow not found. Mock mode active.")
-except Exception as e:
-    model = None
-    print(f"Warning: Could not load CropNet model: {e}")
+    prompt = f"""
+A farmer uploaded a crop image.
 
-CLASS_NAMES = [
-    "Healthy",
-    "Bacterial Spot",
-    "Early Blight",
-    "Late Blight",
-    "Leaf Mold"
-]
+Analyze the crop disease and return:
 
-def predict_crop_disease(image_path):
-    if not model:
-         # Fallback / Mock for when model isn't available
-        return {
-            "disease": "System Check Required",
-            "confidence": 0.0,
-            "error": "Model not loaded"
-        }
+1. Disease Name
+2. Severity Level (Low / Medium / High)
+3. Recommended Treatment
+4. Prevention Advice
 
-    try:
-        img = Image.open(image_path).resize((224, 224))
-        img = np.array(img) / 255.0
-        img = np.expand_dims(img, axis=0)
+Image description:
+{image_description}
+"""
 
-        preds = model.predict(img)[0]
-        class_idx = np.argmax(preds)
-        confidence = float(preds[class_idx])
+    response = ask_gemini(prompt)
 
-        return {
-            "disease": CLASS_NAMES[class_idx],
-            "confidence": confidence
-        }
-    except Exception as e:
-        return {
-            "disease": "Error",
-            "confidence": 0.0,
-            "error": str(e)
-        }
+    return response

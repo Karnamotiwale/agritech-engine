@@ -3,9 +3,9 @@ def plan_irrigation(data, final_decision):
     Rule-based irrigation quantity & scheduling planner.
     """
 
-    crop = data.get("crop")
-    stage = data.get("growth_stage")
-    soil_moisture = data.get("soil_moisture_pct")
+    crop = data.get("crop", "unknown")
+    stage = data.get("growth_stage", "unknown")
+    soil_moisture = float(data.get("soil_moisture_pct") or 50.0)
 
     # If irrigation not recommended
     if final_decision == 0:

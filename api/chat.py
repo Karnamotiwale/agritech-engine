@@ -1,11 +1,28 @@
 from flask import Blueprint, request, jsonify
-from core.openai_service import ask_ai
+from core.gemini_service import ask_gemini
 import json
 
 chat_bp = Blueprint('farmer_chat', __name__)
 
 @chat_bp.route('/farmerChat', methods=['POST'])
 def farmer_chat():
+    """
+    AI chatbot for farmers
+    ---
+    parameters:
+      - name: body
+        in: body
+        required: true
+        schema:
+          type: object
+          properties:
+            question:
+              type: string
+              example: "How do I deal with aphids?"
+    responses:
+      200:
+        description: Chatbot response
+    """
     data = request.json or {}
     question = data.get("question", "")
     
@@ -17,7 +34,7 @@ def farmer_chat():
     """
     
     try:
-        response_text = ask_ai(prompt)
+        response_text = ask_gemini(prompt)
         return jsonify({"answer": response_text}), 200
     except Exception as e:
         return jsonify({"error": str(e)}), 500

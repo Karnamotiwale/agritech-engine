@@ -13,16 +13,16 @@ def generate_explanation(data, ml_prediction, decision):
     explanations = []
     advisories = []
 
-    crop = data["crop"]
-    soil_moisture = data["soil_moisture_pct"]
-    rainfall = data["rainfall_mm"]
-    temperature = data["temperature_c"]
-    disease_risk = data["disease_risk"]
-    pest_risk = data["pest_risk"]
+    crop = data.get("crop", "unknown")
+    soil_moisture = float(data.get("soil_moisture_pct") or 50.0)
+    rainfall = float(data.get("rainfall_mm") or 0.0)
+    temperature = float(data.get("temperature_c") or 25.0)
+    disease_risk = data.get("disease_risk", "low")
+    pest_risk = data.get("pest_risk", "low")
 
-    nitrogen = data["nitrogen_kg_ha"]
-    phosphorus = data["phosphorus_kg_ha"]
-    potassium = data["potassium_kg_ha"]
+    nitrogen = float(data.get("nitrogen_kg_ha") or 50.0)
+    phosphorus = float(data.get("phosphorus_kg_ha") or 50.0)
+    potassium = float(data.get("potassium_kg_ha") or 50.0)
 
     # ---------------- IRRIGATION EXPLANATION ----------------
 

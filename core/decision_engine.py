@@ -1,4 +1,4 @@
-from core.openai_service import ask_ai
+from core.gemini_service import ask_gemini
 import json
 
 from core.policy_engine import is_action_allowed
@@ -33,7 +33,7 @@ def decide_action(ml_prediction, data):
     """
     
     try:
-        response_text = ask_ai(prompt)
+        response_text = ask_gemini(prompt)
         response_text = response_text.replace("```json", "").replace("```", "").strip()
         result = json.loads(response_text)
         
@@ -56,5 +56,29 @@ def decide_action(ml_prediction, data):
         return {
             "decision": int(ml_prediction),
             "reason": "Fallback to ML prediction due to AI error."
+        }
+
+
+def run_decision_engine(sensor):
+    from core.weather_engine import get_weather
+    
+    moisture = sensor.get("moisture", 0)
+    farm_id = sensor.get("farm_id", "default")
+
+    weather = get_weather(farm_id)
+    rain_probability = weather.get("rain_probability", 0)
+
+    if moisture < 35 and rain_probability < 40:
+        return {
+            "action": "IRRIGATE",
+            "duration": 10,
+            "confidence": 0.9,
+            "reason": "Low soil moisture and low rain probability"
+        }
+    else:
+        return {
+            "action": "WAIT",
+            "confidence": 0.8,
+            "reason": "Moisture sufficient or rain expected"
         }
 

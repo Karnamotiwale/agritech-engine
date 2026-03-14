@@ -10,11 +10,17 @@ predictor = AnalyticsPredictor()
 @analytics_bp.route('/overview', methods=['GET'])
 def get_overview():
     """
-    Get real-time analytics overview (trends, current values).
+    Get real-time analytics overview
+    ---
+    tags:
+      - Analytics
+    responses:
+      200:
+        description: Successful response
     """
     try:
         # Fetch last 100 readings (approx 24h if 15m interval)
-        response = supabase.table('sensor_logs').select('*').order('created_at', desc=True).limit(100).execute()
+        response = supabase.table('sensor_readings').select('*').order('created_at', desc=True).limit(100).execute()
         data = response.data
         
         analysis = predictor.analyze_trends(data)
@@ -35,11 +41,17 @@ def get_overview():
 @analytics_bp.route('/range-forecast', methods=['GET'])
 def get_forecast():
     """
-    Get 7-day forecast for yield/conditions.
+    Get 7-day forecast
+    ---
+    tags:
+      - Analytics
+    responses:
+      200:
+        description: Successful response
     """
     try:
         days = int(request.args.get('days', 7))
-        response = supabase.table('sensor_logs').select('*').order('created_at', desc=True).limit(500).execute()
+        response = supabase.table('sensor_readings').select('*').order('created_at', desc=True).limit(500).execute()
         data = response.data
         
         forecast = predictor.predict_short_term(data, days=days)
@@ -58,7 +70,13 @@ def get_forecast():
 @analytics_bp.route('/crop-health', methods=['GET'])
 def get_crop_health():
     """
-    Get aggregated health scores for active crops.
+    Get aggregated health scores
+    ---
+    tags:
+      - Analytics
+    responses:
+      200:
+        description: Successful response
     """
     try:
         # Get active crops
@@ -70,7 +88,7 @@ def get_crop_health():
         # In a real app, we'd do a join or optimized query. 
         # For now, we fetch sensor logs globally or per crop if linked.
         # Assuming global sensors for demo.
-        sensor_res = supabase.table('sensor_logs').select('*').limit(50).execute()
+        sensor_res = supabase.table('sensor_readings').select('*').limit(50).execute()
         
         for crop in crops:
             score = predictor.calculate_health_score(crop, sensor_res.data)

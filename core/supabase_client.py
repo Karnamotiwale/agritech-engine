@@ -1,13 +1,14 @@
+import os
 from supabase import create_client
 from dotenv import load_dotenv
-import os
 
-load_dotenv()
+# Load from project root
+load_dotenv(os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), ".env"))
 
-SUPABASE_URL = os.getenv("SUPABASE_URL")
-SUPABASE_KEY = os.getenv("SUPABASE_SERVICE_KEY")
+url = os.getenv("SUPABASE_URL")
+key = os.getenv("SUPABASE_KEY")
 
-if not SUPABASE_URL or not SUPABASE_KEY:
+if not url or not key:
     raise RuntimeError("Supabase environment variables not set")
 
-supabase = create_client(SUPABASE_URL, SUPABASE_KEY)
+supabase = create_client(url, key)

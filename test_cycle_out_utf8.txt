@@ -1,0 +1,31 @@
+﻿--- STARTING END TO END SYSTEM CYCLE TEST ---
+
+[1] Pushing Sensor Data via POST /sensor-data
+Status Code: 500
+Response: {
+  "message": "{'message': \"Could not find the 'nitrogen' column of 'sensor_readings' in the schema cache\", 'code': 'PGRST204', 'hint': None, 'details': None}",
+  "status": "error"
+}
+
+[2] Fetching Live Dashboard via GET /farm/dashboard/testfarm
+Status Code: 500
+Response: {
+  "message": "{'message': 'invalid input syntax for type uuid: \"testfarm\"', 'code': '22P02', 'hint': None, 'details': None}",
+  "status": "error"
+}
+
+[3] Opening Valve manually via POST /valve/open
+Status Code: 500
+Response: {
+  "message": "{'message': \"Could not find the 'device_id' column of 'irrigation_actions' in the schema cache\", 'code': 'PGRST204', 'hint': None, 'details': None}",
+  "status": "error"
+}
+
+[4] Stopping Valve manually via POST /valve/stop
+Status Code: 500
+Response: {
+  "message": "{'message': \"Could not find the 'device_id' column of 'irrigation_actions' in the schema cache\", 'code': 'PGRST204', 'hint': None, 'details': None}",
+  "status": "error"
+}
+
+--- END OF TEST ---
