@@ -5,7 +5,7 @@ import json
 
 cropnet_bp = Blueprint("cropnet_bp", __name__)
 
-@cropnet_bp.route("/cropnet-detect", methods=["POST"])
+@cropnet_bp.route("/api/v1/crops/detect-disease-cnn", methods=["POST"])
 def cropnet_detect():
     """
     AI Crop Disease Detection using Gemini Vision

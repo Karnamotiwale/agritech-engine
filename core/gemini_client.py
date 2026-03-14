@@ -1,26 +1,21 @@
 import os
 from dotenv import load_dotenv
+import threading
+import time
 
 load_dotenv()
 
-import google.generativeai as genai
-import threading
-import time
+# The new official SDK
+from google import genai
+from google.genai import types
 
 # Ensure API key is loaded
 api_key = os.getenv("GEMINI_API_KEY")
 if not api_key:
     print("Warning: GEMINI_API_KEY is not set. Gemini features will be disabled.")
 
-# Configure Gemini once globally
-genai.configure(api_key=api_key)
-
-# We use gemini-1.5-flash as the default model per requirements
-model = genai.GenerativeModel("gemini-1.5-flash")
-
-# We can specify gemini-1.5-pro for vision if needed, but 1.5-flash also supports vision reasonably well.
-# We will use what's requested, but allow overriding the model if image is passed.
-vision_model = genai.GenerativeModel("gemini-1.5-pro")
+# Initialize the new genai client correctly
+client = genai.Client(api_key=api_key) if api_key else None
 
 gemini_lock = threading.Lock()
 last_call_time = 0
@@ -28,14 +23,11 @@ MIN_DELAY = 2
 
 def generate_ai_response(prompt, image=None):
     """
-    Centralized Gemini caller.
-    Enforces a global lock so only one request happens at a time.
-    Enforces a minimum delay between requests to avoid quota exhaustion.
-    Includes fallback logic to never crash the backend.
+    Centralized Gemini caller using google-genai.
     """
     global last_call_time
     
-    if not api_key:
+    if not client:
         return "AI service temporarily unavailable (API key missing)"
 
     with gemini_lock:
@@ -46,19 +38,27 @@ def generate_ai_response(prompt, image=None):
         last_call_time = time.time()
 
         try:
+            model_name = "gemini-1.5-pro" if image else "gemini-1.5-flash"
+            contents = [prompt]
             if image:
-                response = vision_model.generate_content([prompt, image])
-            else:
-                response = model.generate_content(prompt)
+                contents.append(image)
+                
+            response = client.models.generate_content(
+                model=model_name,
+                contents=contents
+            )
             return response.text
         except Exception as e:
             print("Gemini error:", e)
             return "AI service temporarily unavailable"
 
 def ask_gemini(prompt):
+    """
+    Used primarily by the chatbot and advisory endpoints.
+    """
     global last_call_time
     
-    if not api_key:
+    if not client:
         return "AI advisory service temporarily unavailable (API key missing)."
         
     with gemini_lock:
@@ -69,28 +69,36 @@ def ask_gemini(prompt):
         last_call_time = time.time()
         
         try:
-            # For this we use gemini-2.5-flash as specified in prompt, but we'll use 1.5 because 2.5 is not accessible in genai directly or uses same name. Wait, the prompt specifically said "gemini-2.5-flash". We will use exactly what was requested.
-            model_2_5 = genai.GenerativeModel("gemini-2.5-flash")
-            response = model_2_5.generate_content(prompt)
+            response = client.models.generate_content(
+                model="gemini-2.5-flash",
+                contents=prompt
+            )
             return response.text
         except Exception as e:
             print("Gemini Error:", e)
             return "AI advisory service temporarily unavailable."
 
 # --------------------------------------------------
-# NEW VISION ANALYSIS FUNCTION
+# VISION ANALYSIS FUNCTION
 # --------------------------------------------------
-vision_model_2_5 = genai.GenerativeModel("gemini-2.5-flash")
 
 def analyze_image(prompt, image_path):
+    """
+    Used by the crop disease detection endpoints.
+    """
+    if not client:
+        return "Vision analysis failed: API key missing"
+        
+    # No lock required specifically for this as it's synchronous upload
     try:
-        with open(image_path, "rb") as img:
-            response = vision_model_2_5.generate_content(
-                [
-                    prompt,
-                    {"mime_type": "image/jpeg", "data": img.read()}
-                ]
-            )
+        # With the new google-genai, we can upload files using client.files.upload
+        myfile = client.files.upload(file=image_path)
+        
+        response = client.models.generate_content(
+            model='gemini-2.5-flash',
+            contents=[prompt, myfile]
+        )
         return response.text
     except Exception as e:
         return f"Vision analysis failed: {str(e)}"
+

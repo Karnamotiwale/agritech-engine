@@ -3,7 +3,7 @@ from core.decision_engine import decide_action
 
 ai_decision_bp = Blueprint('ai_decision', __name__)
 
-@ai_decision_bp.route('/irrigationDecision', methods=['POST'])
+@ai_decision_bp.route('/api/v1/ai/irrigation-decision', methods=['POST'])
 def irrigation_decision():
     """
     Irrigation AI prediction

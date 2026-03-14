@@ -4,7 +4,7 @@ import json
 
 disease_bp = Blueprint('disease_advice', __name__)
 
-@disease_bp.route('/diseaseAdvice', methods=['POST'])
+@disease_bp.route('/api/v1/ai/disease-advice', methods=['POST'])
 def disease_advice():
     """
     Get Disease Treatment Advice

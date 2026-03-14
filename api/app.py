@@ -79,18 +79,18 @@ from api.cropnet_detection import cropnet_bp
 import threading
 from core.auto_irrigation_worker import run_loop
 
-app.register_blueprint(analytics_bp, url_prefix='/api/analytics')
-app.register_blueprint(ai_decision_bp, url_prefix='/api')
-app.register_blueprint(yield_bp, url_prefix='/api')
-app.register_blueprint(disease_bp, url_prefix='/api')
-app.register_blueprint(chat_bp, url_prefix='/api')
-app.register_blueprint(rotation_bp, url_prefix='/api')
-app.register_blueprint(sustainability_bp, url_prefix='/api')
-app.register_blueprint(crop_disease_bp, url_prefix='/api')
+app.register_blueprint(analytics_bp)
+app.register_blueprint(ai_decision_bp)
+app.register_blueprint(yield_bp)
+app.register_blueprint(disease_bp)
+app.register_blueprint(chat_bp)
+app.register_blueprint(rotation_bp)
+app.register_blueprint(sustainability_bp)
+app.register_blueprint(crop_disease_bp)
 app.register_blueprint(sensor_api)
 app.register_blueprint(valve_api)
 app.register_blueprint(farm_api)
-app.register_blueprint(cropnet_bp, url_prefix="/api")
+app.register_blueprint(cropnet_bp)
 
 # Start background auto-irrigation worker
 worker_thread = threading.Thread(target=run_loop, daemon=True)
@@ -154,153 +154,6 @@ def model_metrics_endpoint():
     return jsonify({
         "accuracy": model_metrics.get("accuracy", 0.88),
         "precision": model_metrics.get("precision", 0.91)
-    })
-
-# --------------------------------------------------
-# DECISION ENDPOINT (MAIN INTELLIGENCE)
-# --------------------------------------------------
-@app.route("/decide", methods=["POST"])
-def decide():
-    """
-    Smart agricultural decisions
-    ---
-    parameters:
-      - name: body
-        in: body
-        required: true
-        schema:
-          type: object
-          properties:
-            crop:
-              type: string
-            soil_moisture_pct:
-              type: number
-            temperature_c:
-              type: number
-            humidity_pct:
-              type: number
-            disease_risk_score:
-              type: number
-            pest_risk_score:
-              type: number
-    responses:
-      200:
-        description: Comprehensive agricultural decision
-    """
-    data = request.json
-    if not data:
-        return jsonify({"error": "No input data provided"}), 400
-
-    # 0. Global Data Sanitization (Requirement 4)
-    FIELDS_TO_SANITIZE = [
-        "soil_moisture_pct", "rainfall_mm", "temperature_c", "humidity_pct",
-        "nitrogen_kg_ha", "phosphorus_kg_ha", "potassium_kg_ha",
-        "disease_risk_score", "pest_risk_score", "irrigation_applied_mm"
-    ]
-    for field in FIELDS_TO_SANITIZE:
-        data[field] = safe_value(data.get(field))
-
-    # Compatibility mapping for legacy engine logic
-    data["disease_risk"] = "high" if data["disease_risk_score"] > 70 else "medium" if data["disease_risk_score"] > 30 else "low"
-    data["pest_risk"] = "high" if data["pest_risk_score"] > 70 else "medium" if data["pest_risk_score"] > 30 else "low"
-
-    try:
-        crop = validate_crop(data.get("crop"))
-    except ValueError as e:
-        return jsonify({"error": str(e)}), 400
-
-    # 1. ML Prediction (XGBoost)
-    ml_prediction = 0
-    if ml_model:
-        try:
-            # XGBoost expects a DataFrame or specific array shape
-            # Mapping based on training fields: soil_moisture, temperature, humidity, rain_forecast
-            import pandas as pd
-            features = pd.DataFrame([{
-                "soil_moisture": data.get("soil_moisture_pct", 50),
-                "temperature": data.get("temperature_c", 25),
-                "humidity": data.get("humidity_pct", 60),
-                "rain_forecast": data.get("rainfall_mm", 0) # Mapping rain forecast roughly
-            }])
-            ml_prediction = int(ml_model.predict(features)[0])
-        except Exception as e:
-            print(f"Prediction Error: {e}")
-            ml_prediction = 0
-
-    # 2. Hybrid Decision (Rules + RL)
-    decision_result = decide_action(ml_prediction, data)
-    final_decision = decision_result["decision"]
-    reason = decision_result["reason"]
-
-    # 3. Explainable AI
-    explanation = generate_explanation(
-        data,
-        ml_prediction,
-        final_decision
-    )
-
-    # 4. RL Transparency
-    state = get_state(data)
-    q_values = get_q_values(state)
-
-    # 5. Agronomy Advisories
-    fertilizer_advice = recommend_fertilizer(data)
-    pest_disease_advisory = generate_pest_disease_advisory(data)
-    irrigation_plan = plan_irrigation(data, final_decision)
-
-    # 6. Fetch crop journey so far (with error handling)
-    journey_records = []
-    try:
-        response = (
-            supabase
-            .table("crop_trace_log")
-            .select("*")
-            .eq("crop", crop)
-            .order("created_at")
-            .execute()
-        )
-        journey_records = response.data if response and response.data else []
-    except Exception as e:
-        print(f"Supabase journey fetch failed: {e}")
-        journey_records = []
-
-    # 7. Yield trend prediction (with error handling)
-    yield_trend = None
-    try:
-        if journey_records:
-            yield_trend = predict_yield(crop, journey_records)
-    except Exception as e:
-        print(f"Yield prediction failed: {e}")
-        yield_trend = None
-
-    # 8. Log current stage (crop tracing) - fire and forget
-    try:
-        log_crop_stage(
-            data=data,
-            decision=final_decision,
-            irrigation_plan=irrigation_plan,
-            fertilizer=fertilizer_advice,
-            pest_advice=pest_disease_advisory
-        )
-    except Exception as e:
-        print(f"Crop trace logging failed: {e}")
-        # Continue execution even if logging fails
-
-    # 9. Format response for Dashboard (Requirement 5)
-    decision_label = "IRRIGATE" if final_decision == 1 else "WAIT"
-    
-    return jsonify({
-        "state": state,
-        "ml_prediction": int(ml_prediction),
-        "final_decision": final_decision,
-        "final_decision_label": decision_label, # New field for UI
-        "reason": reason,
-        "explanation": explanation,
-        "fertilizer_advice": fertilizer_advice,
-        "pest_disease_advisory": pest_disease_advisory,
-        "irrigation_plan": irrigation_plan,
-        "yield_trend": yield_trend,
-        "q_values": q_values
     })
 
 
@@ -455,49 +308,6 @@ def crop_stages():
     })
 
 
-# --------------------------------------------------
-# FINAL YIELD SNAPSHOT API
-# --------------------------------------------------
-@app.route("/yield/predict", methods=["POST"])
-def yield_predict():
-    """
-    Predict yield trend based on latest sensor data and crop history
-    ---
-    tags:
-      - Prediction
-    parameters:
-      - in: body
-        name: body
-        schema:
-          type: object
-          properties:
-            crop:
-              type: string
-    responses:
-      200:
-        description: Successful response
-    """
-    try:
-        crop = validate_crop(request.json.get("crop"))
-    except ValueError as e:
-        return jsonify({"error": str(e)}), 400
-    if not crop:
-        return jsonify({"error": "Crop required"}), 400
-
-    records = (
-        supabase
-        .table("crop_trace_log")
-        .select("*")
-        .eq("crop", crop)
-        .order("created_at")
-        .execute()
-    )
-
-    return jsonify({
-        "crop": crop,
-        "yield_prediction": predict_yield(crop, records.data)
-    })
-
 
 # --------------------------------------------------
 # AI HEALTH DETECTION ENDPOINT
@@ -535,107 +345,6 @@ def health_detect():
 # Route moved to api/cropnet_detection.py and registered as a blueprint
 # --------------------------------------------------
 
-
-# --------------------------------------------------
-# CROP ROTATION RECOMMENDATION (NEXT SEASON)
-# --------------------------------------------------
-@app.route("/crop/rotation", methods=["POST"])
-def crop_rotation():
-    """
-    Recommend next crop for rotation
-    ---
-    tags:
-      - Agronomy
-    parameters:
-      - in: body
-        name: body
-        schema:
-          type: object
-    responses:
-      200:
-        description: Successful response
-    """
-    try:
-        # 1. Flexible Input Handling (Requirement 1)
-        data = request.json or {}
-        crop_input = data.get("crop")
-        
-        # Default crop if missing
-        crop = "rice"
-        try:
-            if crop_input:
-                crop = validate_crop(crop_input)
-        except Exception:
-            crop = "rice" # Fallback to rice if invalid
-
-        # 2. Extract context or use defaults (Requirement 1)
-        # Frontend might send soil_nutrients or crop_history in the future
-        soil_nutrients = data.get("soil_nutrients", {"N": 0, "P": 0, "K": 0})
-        crop_history = data.get("crop_history", [])
-
-        # 3. Fetch data from Supabase (if exists)
-        records = (
-            supabase
-            .table("crop_trace_log")
-            .select("*")
-            .eq("crop", crop)
-            .order("created_at")
-            .execute()
-        )
-
-        # 4. Hybrid Logic: Use DB records + provided history (Requirement 2)
-        journey = []
-        if records and records.data:
-            journey = records.data
-        elif crop_history:
-            journey = crop_history
-            
-        # 5. Engine Logic (Always returns a recommendation)
-        recommendation = recommend_next_crop(crop, journey)
-        
-        # 6. Transform to the specific contract (Requirement 3)
-        primary_rec = "pulses"
-        recs = recommendation.get("recommended_next_crops", [])
-        if recs and len(recs) > 0:
-            primary_rec = recs[0]
-            
-        reason = recommendation.get("agronomic_reason", "General soil recovery rotation")
-        
-        # Confidence calculation
-        confidence = "low"
-        if len(journey) > 5:
-            confidence = "high"
-        elif len(journey) > 0:
-            confidence = "medium"
-            
-        # Unified Response (New Flat Contract + Legacy UI Support)
-        return jsonify({
-            "status": "success",
-            "input_crop": crop,
-            "recommended_crop": primary_rec,
-            "confidence": confidence,
-            "reason": reason,
-            # Supporting the existing UI without modification
-            "rotation_recommendation": {
-                "recommended_crop": primary_rec.capitalize(),
-                "reason": reason,
-                "benefits": [
-                    "Nitrogen replenishment" if primary_rec == "pulses" else "Biomass improvement",
-                    "Pest cycle disruption",
-                    "Soil structure recovery"
-                ]
-            }
-        }), 200
-
-    except Exception as e:
-        # Requirement 3: Never return raw errors, always success-style fallback
-        return jsonify({
-            "status": "success",
-            "input_crop": "unknown",
-            "recommended_crop": "pulses",
-            "confidence": "low",
-            "reason": "System fallback due to processing error"
-        }), 200
 
 
 # --------------------------------------------------
@@ -1017,50 +726,6 @@ def crop_details():
     except Exception as e:
         return jsonify({"error": str(e)}), 400
 
-
-# --------------------------------------------------
-# DISEASE DETECTION ENDPOINT (STUB FOR NOW)
-# --------------------------------------------------
-@app.route("/detect-disease", methods=["POST"])
-def detect_disease():
-    """
-    Disease detection from crop image.
-    Currently returns mock data - integrate with actual ML model later.
-    """
-    try:
-        if 'image' not in request.files:
-            return jsonify({"error": "No image file provided"}), 400
-
-        file = request.files['image']
-        
-        # For now, return mock disease detection
-        # In production, this would:
-        # 1. Save the image temporarily
-        # 2. Run through a disease detection ML model
-        # 3. Return the prediction
-        
-        # Mock response
-        diseases = [
-            "Healthy",
-            "Leaf Blight",
-            "Powdery Mildew",
-            "Rust",
-            "Bacterial Spot"
-        ]
-        
-        import random
-        detected_disease = random.choice(diseases)
-        confidence = random.uniform(0.75, 0.95)
-        
-        return jsonify({
-            "disease": detected_disease,
-            "confidence": round(confidence, 2),
-            "status": "success",
-            "note": "Mock detection - integrate actual ML model"
-        })
-
-    except Exception as e:
-        return jsonify({"error": str(e)}), 400
 
 
 # --------------------------------------------------

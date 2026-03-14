@@ -1,6 +1,6 @@
 import requests
 
-url = "http://127.0.0.1:5000/api/chat"
+url = "http://127.0.0.1:5000/api/v1/chat"
 headers = {"Content-Type": "application/json"}
 data = {"message": "How can farmers improve soil fertility?"}
 

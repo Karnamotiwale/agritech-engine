@@ -3,7 +3,7 @@ from core.gemini_client import ask_gemini
 
 chat_bp = Blueprint("chat_bp", __name__)
 
-@chat_bp.route("/chat", methods=["POST"])
+@chat_bp.route("/api/v1/chat", methods=["POST"])
 def chat():
     """
     Farmer Advisory Chatbot

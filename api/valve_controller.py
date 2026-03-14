@@ -3,7 +3,7 @@ from core.supabase_client import supabase
 
 valve_api = Blueprint("valve_api", __name__)
 
-@valve_api.route("/valve/open", methods=["POST"])
+@valve_api.route("/api/v1/valves/open", methods=["POST"])
 def open_valve():
     """
     Open Irrigation Valve
@@ -44,7 +44,7 @@ def open_valve():
     except Exception as e:
         return jsonify({"status": "error", "message": str(e)}), 500
 
-@valve_api.route("/valve/stop", methods=["POST"])
+@valve_api.route("/api/v1/valves/stop", methods=["POST"])
 def close_valve():
     """
     Stop Irrigation Valve

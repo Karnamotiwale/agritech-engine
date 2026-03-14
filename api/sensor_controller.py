@@ -4,7 +4,7 @@ from core.decision_engine import run_decision_engine
 
 sensor_api = Blueprint("sensor_api", __name__)
 
-@sensor_api.route("/sensor-data", methods=["POST"])
+@sensor_api.route("/api/v1/sensors/data", methods=["POST"])
 def receive_sensor_data():
     """
     Receive Sensor Data
@@ -49,7 +49,7 @@ def receive_sensor_data():
     except Exception as e:
         return jsonify({"status": "error", "message": str(e)}), 500
 
-@sensor_api.route("/sensor-live/<farm_id>", methods=["GET"])
+@sensor_api.route("/api/v1/sensors/live/<farm_id>", methods=["GET"])
 def get_live_sensor(farm_id):
     """
     Get live sensor readings for a farm

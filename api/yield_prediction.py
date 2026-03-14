@@ -3,7 +3,7 @@ from core.yield_prediction_engine import predict_yield
 
 yield_bp = Blueprint('yield_prediction', __name__)
 
-@yield_bp.route('/yieldPrediction', methods=['POST'])
+@yield_bp.route('/api/v1/crops/yield-prediction', methods=['POST'])
 def yield_prediction():
     """
     Predict Crop Yield

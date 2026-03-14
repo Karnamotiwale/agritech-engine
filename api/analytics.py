@@ -7,7 +7,7 @@ from datetime import datetime, timedelta
 analytics_bp = Blueprint('analytics', __name__)
 predictor = AnalyticsPredictor()
 
-@analytics_bp.route('/overview', methods=['GET'])
+@analytics_bp.route('/api/v1/analytics/overview', methods=['GET'])
 def get_overview():
     """
     Get real-time analytics overview
@@ -38,7 +38,7 @@ def get_overview():
             "status": "error"
         })
 
-@analytics_bp.route('/range-forecast', methods=['GET'])
+@analytics_bp.route('/api/v1/analytics/range-forecast', methods=['GET'])
 def get_forecast():
     """
     Get 7-day forecast
@@ -67,7 +67,7 @@ def get_forecast():
             "error": str(e)
         })
 
-@analytics_bp.route('/crop-health', methods=['GET'])
+@analytics_bp.route('/api/v1/analytics/crop-health', methods=['GET'])
 def get_crop_health():
     """
     Get aggregated health scores

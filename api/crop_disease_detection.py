@@ -4,7 +4,7 @@ from services.crop_disease_service import analyze_crop_disease
 
 crop_disease_bp = Blueprint("crop_disease", __name__)
 
-@crop_disease_bp.route("/detect-disease", methods=["POST"])
+@crop_disease_bp.route("/api/v1/crops/detect-disease", methods=["POST"])
 def detect_disease():
     """
     Detect Crop Disease using AI

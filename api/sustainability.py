@@ -4,7 +4,7 @@ import json
 
 sustainability_bp = Blueprint('sustainability', __name__)
 
-@sustainability_bp.route('/sustainabilityAdvice', methods=['POST'])
+@sustainability_bp.route('/api/v1/ai/sustainability-advice', methods=['POST'])
 def sustainability():
     """
     Get Sustainability Advice

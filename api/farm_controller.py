@@ -5,7 +5,7 @@ from core.decision_engine import run_decision_engine
 
 farm_api = Blueprint("farm_api", __name__)
 
-@farm_api.route("/farm/dashboard/<farm_id>", methods=["GET"])
+@farm_api.route("/api/v1/farm/dashboard/<farm_id>", methods=["GET"])
 def get_farm_dashboard(farm_id):
     """
     Get Farm Dashboard Data

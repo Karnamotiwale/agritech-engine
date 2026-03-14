@@ -4,7 +4,7 @@ import json
 
 rotation_bp = Blueprint('crop_rotation', __name__)
 
-@rotation_bp.route('/cropRotation', methods=['POST'])
+@rotation_bp.route('/api/v1/crops/rotation', methods=['POST'])
 def crop_rotation():
     """
     Suggest Next Crop for Rotation
