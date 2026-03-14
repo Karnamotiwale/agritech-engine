@@ -76,3 +76,21 @@ def ask_gemini(prompt):
         except Exception as e:
             print("Gemini Error:", e)
             return "AI advisory service temporarily unavailable."
+
+# --------------------------------------------------
+# NEW VISION ANALYSIS FUNCTION
+# --------------------------------------------------
+vision_model_2_5 = genai.GenerativeModel("gemini-2.5-flash")
+
+def analyze_image(prompt, image_path):
+    try:
+        with open(image_path, "rb") as img:
+            response = vision_model_2_5.generate_content(
+                [
+                    prompt,
+                    {"mime_type": "image/jpeg", "data": img.read()}
+                ]
+            )
+        return response.text
+    except Exception as e:
+        return f"Vision analysis failed: {str(e)}"

@@ -75,6 +75,7 @@ from api.crop_disease_detection import crop_disease_bp
 from api.sensor_controller import sensor_api
 from api.valve_controller import valve_api
 from api.farm_controller import farm_api
+from api.cropnet_detection import cropnet_bp
 import threading
 from core.auto_irrigation_worker import run_loop
 
@@ -89,6 +90,7 @@ app.register_blueprint(crop_disease_bp, url_prefix='/api')
 app.register_blueprint(sensor_api)
 app.register_blueprint(valve_api)
 app.register_blueprint(farm_api)
+app.register_blueprint(cropnet_bp, url_prefix="/api")
 
 # Start background auto-irrigation worker
 worker_thread = threading.Thread(target=run_loop, daemon=True)
@@ -530,46 +532,8 @@ def health_detect():
 
 # --------------------------------------------------
 # CROP DISEASE DETECTION ENDPOINT (CropNet)
+# Route moved to api/cropnet_detection.py and registered as a blueprint
 # --------------------------------------------------
-from services.crop_disease_service import analyze_crop_disease
-import json
-
-@app.route("/cropnet-detect", methods=["POST"])
-def cropnet_detect():
-    """
-    Detects crop disease from an uploaded image file using OpenAI Vision.
-    """
-    try:
-        if "image" not in request.files:
-            return jsonify({"error": "No image file provided"}), 400
-            
-        file = request.files["image"]
-        if file.filename == "":
-            return jsonify({"error": "No selected file"}), 400
-
-        # Save temporarily
-        temp_path = "temp_crop_upload.jpg"
-        file.save(temp_path)
-
-        # Predict
-        result = analyze_crop_disease(temp_path)
-        
-        # Cleanup (optional, depends on OS locking)
-        try:
-            os.remove(temp_path)
-        except:
-            pass # Windows might lock the file briefly
-
-        # Parse the JSON string back to dict for jsonify
-        try:
-            parsed_result = json.loads(result)
-        except:
-            parsed_result = {"analysis": result}
-
-        return jsonify(parsed_result), 200
-        
-    except Exception as e:
-        return jsonify({"error": str(e)}), 500
 
 
 # --------------------------------------------------

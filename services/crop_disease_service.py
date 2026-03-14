@@ -1,26 +1,26 @@
-import os
-from dotenv import load_dotenv
-from PIL import Image
-from core.gemini_client import generate_ai_response
-
-load_dotenv()
-
+from core.gemini_client import analyze_image
 
 def analyze_crop_disease(image_path):
 
-    img = Image.open(image_path)
-
     prompt = """
-    Analyze this crop leaf image and determine:
+You are an expert agricultural plant pathologist.
 
-    1. Disease name
-    2. Severity level
-    3. Treatment recommendation
-    4. Prevention advice
+Analyze the crop leaf image and determine:
 
-    Explain clearly so farmers can understand.
-    """
+1. Possible disease
+2. Symptoms observed
+3. Recommended treatment
+4. Prevention advice
 
-    response = generate_ai_response(prompt, image=img)
+Respond in JSON format:
+{
+ "disease": "",
+ "symptoms": "",
+ "treatment": "",
+ "prevention": ""
+}
+"""
 
-    return response
+    result = analyze_image(prompt, image_path)
+
+    return result
