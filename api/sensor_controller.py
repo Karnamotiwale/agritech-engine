@@ -30,9 +30,13 @@ def receive_sensor_data():
         if not data:
             return jsonify({"status": "error", "message": "No data provided"}), 400
 
+        raw_moisture = data.get("moisture")
+        if raw_moisture is not None and isinstance(raw_moisture, (int, float)) and raw_moisture > 100:
+            raw_moisture = round((raw_moisture / 1023.0) * 100.0, 2)
+
         sensor_payload = {
             "device_id": data.get("farm_id"),
-            "moisture": data.get("moisture")
+            "moisture": raw_moisture
         }
 
         supabase.table("sensor_readings").insert(sensor_payload).execute()

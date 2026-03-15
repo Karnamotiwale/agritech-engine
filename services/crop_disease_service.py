@@ -1,24 +1,18 @@
-from core.gemini_client import analyze_image
+from core.gemini_client import analyze_image  # type: ignore
 
 def analyze_crop_disease(image_path):
 
     prompt = """
 You are an expert agricultural plant pathologist.
 
-Analyze the crop leaf image and determine:
+Analyze the crop leaf image and determine the disease and recommended treatment.
 
-1. Possible disease
-2. Symptoms observed
-3. Recommended treatment
-4. Prevention advice
-
-Respond in JSON format:
-{
- "disease": "",
- "symptoms": "",
- "treatment": "",
- "prevention": ""
-}
+Rules:
+• Give short answers only.
+• Maximum 2 sentences.
+• Do NOT return JSON.
+• Do NOT explain in detail.
+• Use simple farmer-friendly language.
 """
 
     result = analyze_image(prompt, image_path)

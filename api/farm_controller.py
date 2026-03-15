@@ -13,7 +13,14 @@ def get_farms():
         result = supabase.table("farms").select("*").execute()
         db_farms = result.data if result and result.data else []
         local_farms = get_all_farms()
-        return jsonify(db_farms + local_farms), 200
+        
+        # Standardize units for output
+        all_farms = db_farms + local_farms
+        for f in all_farms:
+            if "total_land_acres" in f:
+                f["total_land_ha"] = round(f.pop("total_land_acres") * 0.404686, 2)
+                
+        return jsonify(all_farms), 200
     except Exception as e:
         from api.local_db_utils import get_all_farms
         return jsonify(get_all_farms()), 200
@@ -25,9 +32,13 @@ def create_farm():
         if not data:
             return jsonify({"status": "error", "message": "No data provided"}), 400
             
+        # Receive Hectares, store internally as acres until DB migration
+        area_ha = float(data.get("area", 0))
+        area_acres = area_ha / 0.404686
+        
         farm_data = {
             "farm_name": data.get("name", "Unnamed Farm"),
-            "total_land_acres": data.get("area", 0),
+            "total_land_acres": area_acres,
             "latitude": data.get("latitude", 0),
             "longitude": data.get("longitude", 0)
         }

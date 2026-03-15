@@ -1,5 +1,6 @@
-from flask import Blueprint, request, jsonify
-from core.gemini_client import ask_gemini
+from flask import Blueprint, request, jsonify  # type: ignore
+from core.gemini_client import ask_gemini  # type: ignore
+from core.response_formatter import short_response
 
 chat_bp = Blueprint("chat_bp", __name__)
 
@@ -41,22 +42,24 @@ def chat():
     system_prompt = f"""
     You are an expert agricultural advisor helping farmers.
     Answer in simple language suitable for farmers.
+
+    Rules:
+    • Give short answers only.
+    • Maximum 2 sentences.
+    • Do NOT return JSON.
+    • Do NOT explain in detail.
+    • Use simple farmer-friendly language.
     
     Question:
     {message}
-    
-    Provide:
-    • practical advice
-    • crop recommendations
-    • fertilizer suggestions if relevant
-    • prevention tips if disease related
     """
     
-    response_text = ask_gemini(system_prompt)
+    raw_response = ask_gemini(system_prompt)
+    response_text = short_response(raw_response)
     
     # Optional: Log Chat History to Supabase
     try:
-        from core.supabase_client import supabase
+        from core.supabase_client import supabase  # type: ignore
         supabase.table("advisory_chat_logs").insert({
             "user_message": message,
             "ai_response": response_text
@@ -65,5 +68,5 @@ def chat():
         print(f"Warning: Failed to log chat to Supabase: {e}")
     
     return jsonify({
-        "response": response_text
+        "message": response_text
     })

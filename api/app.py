@@ -1,33 +1,35 @@
+# pyre-ignore-all-errors
+# type: ignore
 import sys
 import os
 
 # Ensure the project root is in the python path
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from dotenv import load_dotenv
+from dotenv import load_dotenv  # type: ignore
 import os
 
 load_dotenv(os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), ".env"))
 
-from flask import Flask, request, jsonify
-from flask_cors import CORS
+from flask import Flask, request, jsonify  # type: ignore
+from flask_cors import CORS  # type: ignore
 import random
 
 # --------------------------------------------------
 # Advisory & Planning Engines
 # --------------------------------------------------
-from core.fertilizer_engine import recommend_fertilizer
-from core.pest_disease_engine import generate_pest_disease_advisory
-from core.irrigation_planner import plan_irrigation
-from core.pesticide_recommendation_engine import get_pesticide_recommendation, get_stage_specific_advisory
+from core.fertilizer_engine import recommend_fertilizer  # type: ignore
+from core.pest_disease_engine import generate_pest_disease_advisory  # type: ignore
+from core.irrigation_planner import plan_irrigation  # type: ignore
+from core.pesticide_recommendation_engine import get_pesticide_recommendation, get_stage_specific_advisory  # type: ignore
 
 # --------------------------------------------------
 # Core AI Engines
 # --------------------------------------------------
-from core.ml_model import IrrigationMLModel
-from core.decision_engine import decide_action
-from core.regret_engine import calculate_regret
-from core.rl_engine import update_q_table, get_q_values, get_state, get_q_table
+from core.ml_model import IrrigationMLModel  # type: ignore
+from core.decision_engine import decide_action  # type: ignore
+from core.regret_engine import calculate_regret  # type: ignore
+from core.rl_engine import update_q_table, get_q_values, get_state, get_q_table  # type: ignore
 
 # Mock policy state function as requested
 def get_policy_state():
@@ -41,21 +43,21 @@ def get_policy_state():
             "rain_waste": 2.0
         }
     }
-from core.xai_engine import generate_explanation
-from core.crop_rotation_engine import recommend_next_crop
+from core.xai_engine import generate_explanation  # type: ignore
+from core.crop_rotation_engine import recommend_next_crop  # type: ignore
 
 # --------------------------------------------------
 # Crop Tracing & Yield Engines
 # --------------------------------------------------
-from core.crop_trace_engine import log_crop_stage
-from core.yield_prediction_engine import predict_yield
-from core.supabase_client import supabase
-from core.crop_constants import ALLOWED_CROPS, CROP_LIFECYCLES, validate_crop, safe_value
+from core.crop_trace_engine import log_crop_stage  # type: ignore
+from core.yield_prediction_engine import predict_yield  # type: ignore
+from core.supabase_client import supabase  # type: ignore
+from core.crop_constants import ALLOWED_CROPS, CROP_LIFECYCLES, validate_crop, safe_value  # type: ignore
 
 # --------------------------------------------------
 # Flask app
 # --------------------------------------------------
-from flasgger import Swagger
+from flasgger import Swagger  # type: ignore
 app = Flask(__name__)
 swagger = Swagger(app)
 # 1. Enable CORS for frontend
@@ -64,22 +66,25 @@ CORS(app, resources={r"/*": {"origins": ["http://localhost:5173"]}}, supports_cr
 # --------------------------------------------------
 # REGISTER BLUEPRINTS
 # --------------------------------------------------
-from api.analytics import analytics_bp
-from api.ai_decision import ai_decision_bp
-from api.yield_prediction import yield_bp
-from api.disease_advice import disease_bp
-from api.chat import chat_bp
-from api.crop_rotation import rotation_bp
-from api.sustainability import sustainability_bp
-from api.crop_disease_detection import crop_disease_bp
-from api.sensor_controller import sensor_api
-from api.valve_controller import valve_api
-from api.farm_controller import farm_api
-from api.cropnet_detection import cropnet_bp
-from api.crop_controller import crop_api
-from api.weather_routes import weather_bp
+from api.analytics import analytics_bp  # type: ignore
+from api.ai_decision import ai_decision_bp  # type: ignore
+from api.yield_prediction import yield_bp  # type: ignore
+from api.disease_advice import disease_bp  # type: ignore
+from api.chat import chat_bp  # type: ignore
+from api.crop_rotation import rotation_bp  # type: ignore
+from api.sustainability import sustainability_bp  # type: ignore
+from api.crop_disease_detection import crop_disease_bp  # type: ignore
+from api.sensor_controller import sensor_api  # type: ignore
+from api.valve_controller import valve_api  # type: ignore
+from api.farm_controller import farm_api  # type: ignore
+from api.cropnet_detection import cropnet_bp  # type: ignore
+from api.crop_controller import crop_api  # type: ignore
+from api.weather_routes import weather_bp  # type: ignore
+from api.alert_controller import alert_api  # type: ignore
+from api.ai_advisory import ai_advisory_bp  # type: ignore
+from api.carbon_controller import carbon_bp  # type: ignore
 import threading
-from core.auto_irrigation_worker import run_loop
+from core.auto_irrigation_worker import run_loop  # type: ignore
 
 app.register_blueprint(analytics_bp)
 app.register_blueprint(ai_decision_bp)
@@ -94,11 +99,25 @@ app.register_blueprint(valve_api)
 app.register_blueprint(farm_api)
 app.register_blueprint(cropnet_bp)
 app.register_blueprint(crop_api)
+app.register_blueprint(carbon_bp)
 app.register_blueprint(weather_bp)
+app.register_blueprint(alert_api)
+app.register_blueprint(ai_advisory_bp)
 
 # Start background auto-irrigation worker
-worker_thread = threading.Thread(target=run_loop, daemon=True)
-worker_thread.start()
+try:
+    worker_thread = threading.Thread(target=run_loop, daemon=True)
+    worker_thread.start()
+except Exception as e:
+    print(f"Warning: Could not start irrigation worker: {e}")
+
+# Start background alert monitoring worker
+try:
+    from core.alert_worker import run_alert_loop  # type: ignore
+    alert_thread = threading.Thread(target=run_alert_loop, daemon=True)
+    alert_thread.start()
+except Exception as e:
+    print(f"Warning: Could not start alert worker: {e}")
 
 # 2. Global Error Handler - Force JSON responses
 @app.errorhandler(Exception)
@@ -111,7 +130,7 @@ def handle_exception(e):
 # --------------------------------------------------
 # LOAD ML MODEL ONCE
 # --------------------------------------------------
-import joblib
+import joblib  # type: ignore
 try:
     # Load XGBoost model and metrics
     ml_model = joblib.load("models/xgb_model.pkl")
@@ -281,7 +300,7 @@ def crop_stages():
     except ValueError as e:
         return jsonify({"error": str(e)}), 400
 
-    from core.crop_constants import CROP_LIFECYCLES
+    from core.crop_constants import CROP_LIFECYCLES  # type: ignore
     stages = CROP_LIFECYCLES.get(crop, [])
     
     # Calculate statuses based on a hypothetical 'days_since_sowing' 
@@ -332,10 +351,14 @@ def health_detect():
     if not image_url:
         return jsonify({"error": "image_url is required"}), 400
     
-    # Real implementation would use a CNN model here
-    # For now, we return a "not implemented" or clean empty state
-    # rather than guessing/mocking.
-    
+    db_ok = False
+    try:
+        supabase.table("sensor_readings").select("count", count="exact").limit(1).execute()
+        db_ok = True
+    except Exception:
+        pass
+
+    from datetime import datetime
     return jsonify({
         "status": "online",
         "model_availability": "100%" if ml_model else "0%",
@@ -434,7 +457,7 @@ def gemini_status():
     Returns specific status of the Gemini client implementation.
     """
     try:
-        from core.gemini_client import api_key, MIN_DELAY, gemini_lock
+        from core.gemini_client import api_key, MIN_DELAY, gemini_lock  # type: ignore
         return jsonify({
             "api_key_loaded": bool(api_key),
             "model": "gemini-1.5-flash",

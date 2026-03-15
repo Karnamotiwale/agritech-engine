@@ -1,0 +1,5 @@
+﻿api\app.py:355:41: F821 undefined name 'db_ok'
+        "db_connectivity": "Healthy" if db_ok else "Disconnected",
+                                        ^
+1     F821 undefined name 'db_ok'
+1

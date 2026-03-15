@@ -1,5 +1,6 @@
-from flask import Blueprint, request, jsonify
-from services.crop_disease_service import analyze_crop_disease
+from flask import Blueprint, request, jsonify  # type: ignore
+from services.crop_disease_service import analyze_crop_disease  # type: ignore
+from core.response_formatter import short_response
 import os
 import json
 
@@ -55,15 +56,5 @@ def cropnet_detect():
     except:
         pass
 
-    # Try to parse the result as JSON to ensure the format is valid and returned cleanly
-    try:
-        # Sometimes LLMs wrap JSON in ```json blocks
-        if result.startswith("```json"):
-            result = result[7:]
-            if result.endswith("```"):
-                result = result[:-3]
-        parsed_result = json.loads(result)
-        return jsonify({"analysis": parsed_result}), 200
-    except json.JSONDecodeError:
-        # Fallback to returning raw text inside the expected dictionary structure if JSON fails
-        return jsonify({"analysis": result}), 200
+    short_text = short_response(result)
+    return jsonify({"message": short_text}), 200
