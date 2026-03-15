@@ -76,6 +76,7 @@ from api.sensor_controller import sensor_api
 from api.valve_controller import valve_api
 from api.farm_controller import farm_api
 from api.cropnet_detection import cropnet_bp
+from api.crop_controller import crop_api
 import threading
 from core.auto_irrigation_worker import run_loop
 
@@ -91,6 +92,7 @@ app.register_blueprint(sensor_api)
 app.register_blueprint(valve_api)
 app.register_blueprint(farm_api)
 app.register_blueprint(cropnet_bp)
+app.register_blueprint(crop_api)
 
 # Start background auto-irrigation worker
 worker_thread = threading.Thread(target=run_loop, daemon=True)
@@ -140,7 +142,7 @@ def health():
 # --------------------------------------------------
 # MODEL METRICS ENDPOINT (New)
 # --------------------------------------------------
-@app.route("/model-metrics", methods=["GET"])
+@app.route("/api/v1/model-metrics", methods=["GET"])
 def model_metrics_endpoint():
     """
     Get AI Model Metrics
@@ -160,7 +162,7 @@ def model_metrics_endpoint():
 # --------------------------------------------------
 # FEEDBACK ENDPOINT (REGRET + RL LEARNING)
 # --------------------------------------------------
-@app.route("/feedback", methods=["POST"])
+@app.route("/api/v1/feedback", methods=["POST"])
 def feedback():
     """
     Submit feedback on irrigation decisions
@@ -207,7 +209,7 @@ def feedback():
 # --------------------------------------------------
 # CROP JOURNEY API (FULL TRACE)
 # --------------------------------------------------
-@app.route("/crop/journey", methods=["POST"])
+@app.route("/api/v1/crop/journey", methods=["POST"])
 def crop_journey():
     """
     Get full crop tracing history
@@ -251,7 +253,7 @@ def crop_journey():
 # --------------------------------------------------
 # CROP STAGES API (LIFECYCLE GUIDES)
 # --------------------------------------------------
-@app.route("/crop/stages", methods=["POST"])
+@app.route("/api/v1/crop/stages", methods=["POST"])
 def crop_stages():
     """
     Get crop lifecycle stages
@@ -312,7 +314,7 @@ def crop_stages():
 # --------------------------------------------------
 # AI HEALTH DETECTION ENDPOINT
 # --------------------------------------------------
-@app.route("/ai/health-detect", methods=["POST"])
+@app.route("/api/v1/ai/health-detect", methods=["POST"])
 def health_detect():
     """
     Disease detection endpoint that receives image URL and crop ID
@@ -350,7 +352,7 @@ def health_detect():
 # --------------------------------------------------
 # PESTICIDE RECOMMENDATION ENDPOINT
 # --------------------------------------------------
-@app.route("/pesticide/recommend", methods=["POST"])
+@app.route("/api/v1/pesticide/recommend", methods=["POST"])
 def pesticide_recommend():
     """
     Intelligent pesticide recommendation based on:
@@ -397,7 +399,7 @@ def pesticide_recommend():
 # --------------------------------------------------
 # AI STATUS & HEALTH (Phase 3)
 # --------------------------------------------------
-@app.route("/ai/status", methods=["GET"])
+@app.route("/api/v1/ai/status", methods=["GET"])
 def ai_status():
     """
     Returns AI health metrics and service status.
@@ -424,7 +426,7 @@ def ai_status():
 # --------------------------------------------------
 # GEMINI AI STATUS ENDPOINT
 # --------------------------------------------------
-@app.route("/ai/gemini-status", methods=["GET"])
+@app.route("/api/v1/ai/gemini-status", methods=["GET"])
 def gemini_status():
     """
     Returns specific status of the Gemini client implementation.
@@ -443,7 +445,7 @@ def gemini_status():
 # --------------------------------------------------
 # DECISION LOG (Phase 3)
 # --------------------------------------------------
-@app.route("/ai/decision-log", methods=["GET"])
+@app.route("/api/v1/ai/decision-log", methods=["GET"])
 def ai_decision_log():
     """
     Returns historical decisions from the trace log.
@@ -464,7 +466,7 @@ def ai_decision_log():
 # --------------------------------------------------
 # RL METRICS (Phase 3)
 # --------------------------------------------------
-@app.route("/ai/rl-metrics", methods=["GET"])
+@app.route("/api/v1/ai/rl-metrics", methods=["GET"])
 def rl_metrics():
     """
     Returns RL agent performance metrics.
@@ -487,7 +489,7 @@ def rl_metrics():
 # --------------------------------------------------
 # REGRET ANALYSIS (Phase 3)
 # --------------------------------------------------
-@app.route("/ai/regret", methods=["GET"])
+@app.route("/api/v1/ai/regret", methods=["GET"])
 def ai_regret():
     """
     Returns regret analysis.
@@ -506,7 +508,7 @@ def ai_regret():
 # --------------------------------------------------
 # EXPLAINABLE AI (XAI) (Phase 3)
 # --------------------------------------------------
-@app.route("/ai/xai", methods=["GET"])
+@app.route("/api/v1/ai/xai", methods=["GET"])
 def ai_xai():
     """
     Returns human-readable explanations.
@@ -537,8 +539,8 @@ def ai_xai():
 # --------------------------------------------------
 # SENSOR ENDPOINTS (Maintained for backward sync)
 # --------------------------------------------------
-@app.route("/sensors", methods=["GET"])
-@app.route("/sensors/tick", methods=["GET"])
+@app.route("/api/v1/sensors", methods=["GET"])
+@app.route("/api/v1/sensors/tick", methods=["GET"])
 def get_sensors():
     try:
         crop_id = request.args.get("crop_id")
@@ -589,7 +591,7 @@ def get_sensors():
 # --------------------------------------------------
 # RESOURCE ANALYTICS API (For Financial Summary)
 # --------------------------------------------------
-@app.route("/api/analytics/resources", methods=["GET"])
+@app.route("/api/v1/analytics/resources", methods=["GET"])
 def resource_analytics():
     """
     Returns resource usage and efficiency metrics.
@@ -613,7 +615,7 @@ def resource_analytics():
 # --------------------------------------------------
 # ANALYTICS DASHBOARD API
 # --------------------------------------------------
-@app.route("/analytics", methods=["GET"])
+@app.route("/api/v1/analytics", methods=["GET"])
 def analytics():
     """
     Returns AI system analytics including:
@@ -661,7 +663,7 @@ def analytics():
 # --------------------------------------------------
 # UNIFIED CROP DETAILS ENDPOINT (AI + STRESS + SENSORS)
 # --------------------------------------------------
-@app.route("/crop-details", methods=["POST"])
+@app.route("/api/v1/crop-details", methods=["POST"])
 def crop_details():
     """
     Unified endpoint that returns AI decision and crop stress level
@@ -731,7 +733,7 @@ def crop_details():
 # --------------------------------------------------
 # SYSTEM DIAGNOSTICS ENDPOINT (STEP 8)
 # --------------------------------------------------
-@app.route("/system/diagnostics", methods=["GET"])
+@app.route("/api/v1/system/diagnostics", methods=["GET"])
 def system_diagnostics():
     """
     System Diagnostics

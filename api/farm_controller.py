@@ -1,9 +1,42 @@
-from flask import Blueprint, jsonify
+from flask import Blueprint, jsonify, request
 from core.supabase_client import supabase
 from core.weather_engine import get_weather
 from core.decision_engine import run_decision_engine
 
 farm_api = Blueprint("farm_api", __name__)
+
+@farm_api.route("/api/v1/farms", methods=["GET"])
+def get_farms():
+    try:
+        # Fetch farms from database (ignoring user_id for simplicity unless auth is setup)
+        result = supabase.table("farms").select("*").execute()
+        return jsonify(result.data if result and result.data else []), 200
+    except Exception as e:
+        return jsonify({"status": "error", "message": str(e)}), 500
+
+@farm_api.route("/api/v1/farms", methods=["POST"])
+def create_farm():
+    try:
+        data = request.json
+        if not data:
+            return jsonify({"status": "error", "message": "No data provided"}), 400
+            
+        farm_data = {
+            "farm_name": data.get("name", "Unnamed Farm"),
+            "total_land_acres": data.get("area", 0),
+            "latitude": data.get("latitude", 0),
+            "longitude": data.get("longitude", 0)
+        }
+        
+        # Insert into Supabase
+        result = supabase.table("farms").insert(farm_data).execute()
+        if result and result.data:
+            return jsonify(result.data[0]), 201
+        else:
+            return jsonify({"status": "error", "message": "Failed to create farm"}), 500
+            
+    except Exception as e:
+        return jsonify({"status": "error", "message": str(e)}), 500
 
 @farm_api.route("/api/v1/farm/dashboard/<farm_id>", methods=["GET"])
 def get_farm_dashboard(farm_id):
