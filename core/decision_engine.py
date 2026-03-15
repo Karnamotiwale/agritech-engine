@@ -29,8 +29,9 @@ def decide_action(ml_prediction, data):
 def run_decision_engine(sensor):
     from core.weather_engine import get_weather
     
-    moisture = sensor.get("moisture", 0)
-    farm_id = sensor.get("farm_id", "default")
+    # Map from the new sensor_data table
+    moisture = sensor.get("soil_moisture") or sensor.get("moisture", 0)
+    farm_id = sensor.get("farm_id") or sensor.get("device_id", "default")
 
     weather = get_weather(farm_id)
     rain_probability = weather.get("rain_probability", 0)

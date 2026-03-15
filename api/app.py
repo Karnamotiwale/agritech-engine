@@ -77,6 +77,7 @@ from api.valve_controller import valve_api
 from api.farm_controller import farm_api
 from api.cropnet_detection import cropnet_bp
 from api.crop_controller import crop_api
+from api.weather_routes import weather_bp
 import threading
 from core.auto_irrigation_worker import run_loop
 
@@ -93,6 +94,7 @@ app.register_blueprint(valve_api)
 app.register_blueprint(farm_api)
 app.register_blueprint(cropnet_bp)
 app.register_blueprint(crop_api)
+app.register_blueprint(weather_bp)
 
 # Start background auto-irrigation worker
 worker_thread = threading.Thread(target=run_loop, daemon=True)

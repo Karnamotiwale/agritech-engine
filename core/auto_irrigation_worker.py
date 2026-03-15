@@ -12,7 +12,7 @@ def run_loop():
         try:
             # Fetch latest reading from recent sensors
             sensors = (
-                supabase.table("sensor_readings")
+                supabase.table("sensor_data")
                 .select("*")
                 .order("created_at", desc=True)
                 .limit(10)
@@ -27,8 +27,8 @@ def run_loop():
                         if decision and decision.get("action") == "IRRIGATE":
                             # Perform the action log
                             action_payload = {
-                                "farm_id": s.get("device_id"), # device_id in sensor_readings
-                                "crop_id": s.get("crop_id"), 
+                                "farm_id": s.get("farm_id", "default"),
+                                "crop_id": s.get("crop_id", "default"), 
                                 "action": "IRRIGATE",
                                 "duration": decision.get("duration", 10)
                             }
@@ -37,9 +37,9 @@ def run_loop():
                             # here to ensure action is not continuously spammed
                             # if the sensor hasn't updated its state quickly enough.
                             supabase.table("irrigation_actions").insert(action_payload).execute()
-                            logging.info(f"Auto Irrigation Worker toggled IRRIGATE for Farm: {s.get('device_id')}")
+                            logging.info(f"Auto Irrigation Worker toggled IRRIGATE for Farm: {s.get('farm_id')}")
                     except Exception as inner_e:
-                        logging.error(f"Error processing sensor {s.get('device_id')}: {inner_e}")
+                        logging.error(f"Error processing sensor {s.get('farm_id')}: {inner_e}")
             
         except Exception as e:
             logging.error(f"Error inside auto irrigation loop: {e}")
