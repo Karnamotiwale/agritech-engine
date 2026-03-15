@@ -1,24 +1,21 @@
 {
-  "pythonVersion": "3.11",
-  "pythonPlatform": "Windows",
-  "venvPath": ".",
-  "venv": "venv",
   "include": [
-    "api",
-    "core",
-    "services",
-    "models"
+    "."
   ],
+  "exclude": [
+    "**/__pycache__",
+    "venv"
+  ],
+  "venvPath": "c:/Users/Karna/Desktop/AGRIAI/agritech-engine",
+  "venv": "venv",
   "extraPaths": [
-    ".",
-    "api",
-    "core",
-    "services",
-    "models"
+    "c:/Users/Karna/Desktop/AGRIAI/agritech-engine",
+    "c:/Users/Karna/Desktop/AGRIAI/agritech-engine/api",
+    "c:/Users/Karna/Desktop/AGRIAI/agritech-engine/core"
   ],
-  "typeCheckingMode": "off",
+  "pythonPath": "c:/Users/Karna/Desktop/AGRIAI/agritech-engine/venv/Scripts/python.exe",
+  "typeCheckingMode": "basic",
   "useLibraryCodeForTypes": true,
-  "reportMissingImports": false,
-  "reportMissingModuleSource": false,
-  "reportUndefinedVariable": "warning"
+  "reportMissingImports": "warning",
+  "reportMissingModuleSource": "warning"
 }

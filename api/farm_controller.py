@@ -2,13 +2,13 @@ from flask import Blueprint, jsonify, request
 from core.supabase_client import supabase
 from core.weather_engine import get_weather
 from core.decision_engine import run_decision_engine
+from api.local_db_utils import get_all_farms, add_local_farm
 
 farm_api = Blueprint("farm_api", __name__)
 
 @farm_api.route("/api/v1/farms", methods=["GET"])
 def get_farms():
     try:
-        from api.local_db_utils import get_all_farms
         # Fetch farms from database (ignoring user_id for simplicity unless auth is setup)
         result = supabase.table("farms").select("*").execute()
         db_farms = result.data if result and result.data else []
@@ -22,7 +22,6 @@ def get_farms():
                 
         return jsonify(all_farms), 200
     except Exception as e:
-        from api.local_db_utils import get_all_farms
         return jsonify(get_all_farms()), 200
 
 @farm_api.route("/api/v1/farms", methods=["POST"])
@@ -49,11 +48,9 @@ def create_farm():
             if result and result.data:
                 return jsonify(result.data[0]), 201
             else:
-                from api.local_db_utils import add_local_farm
                 return jsonify(add_local_farm(farm_data)), 201
         except Exception as e:
             # Fallback to local DB due to auth or FK error
-            from api.local_db_utils import add_local_farm
             return jsonify(add_local_farm(farm_data)), 201
             
     except Exception as e:

@@ -32,7 +32,7 @@ def receive_sensor_data():
 
         raw_moisture = data.get("moisture")
         if raw_moisture is not None and isinstance(raw_moisture, (int, float)) and raw_moisture > 100:
-            raw_moisture = round((raw_moisture / 1023.0) * 100.0, 2)
+            raw_moisture = float("{:.2f}".format((raw_moisture / 1023.0) * 100.0))
 
         sensor_payload = {
             "device_id": data.get("farm_id"),

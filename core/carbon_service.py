@@ -24,17 +24,17 @@ def calculate_carbon_footprint(
 
     Returns structured emission result with breakdown and per-hectare metrics.
     """
-    electricity_emission = round(electricity_kwh * ELECTRICITY_FACTOR, 2)
-    fertilizer_emission = round(fertilizer_kg * FERTILIZER_FACTOR, 2)
-    fuel_emission = round(diesel_liters * DIESEL_FACTOR, 2)
-    residue_emission = round(residue_kg * RESIDUE_FACTOR, 2)
+    electricity_emission = float("{:.2f}".format(electricity_kwh * ELECTRICITY_FACTOR))
+    fertilizer_emission = float("{:.2f}".format(fertilizer_kg * FERTILIZER_FACTOR))
+    fuel_emission = float("{:.2f}".format(diesel_liters * DIESEL_FACTOR))
+    residue_emission = float("{:.2f}".format(residue_kg * RESIDUE_FACTOR))
 
-    total_carbon = round(
-        electricity_emission + fertilizer_emission + fuel_emission + residue_emission, 2
-    )
+    total_carbon = float("{:.2f}".format(
+        electricity_emission + fertilizer_emission + fuel_emission + residue_emission
+    ))
 
     area = max(farm_area_hectare, 0.01)  # Prevent division by zero
-    carbon_per_hectare = round(total_carbon / area, 2)
+    carbon_per_hectare = float("{:.2f}".format(total_carbon / area))
 
     # Emission percentages for recommendation logic
     total_safe = max(total_carbon, 0.01)
@@ -60,10 +60,10 @@ def calculate_carbon_footprint(
         "fuel_emission": fuel_emission,
         "residue_emission": residue_emission,
         "emission_breakdown": {
-            "electricity_pct": round(electricity_pct, 1),
-            "fertilizer_pct": round(fertilizer_pct, 1),
-            "fuel_pct": round(fuel_pct, 1),
-            "residue_pct": round(residue_pct, 1),
+            "electricity_pct": float("{:.1f}".format(electricity_pct)),
+            "fertilizer_pct": float("{:.1f}".format(fertilizer_pct)),
+            "fuel_pct": float("{:.1f}".format(fuel_pct)),
+            "residue_pct": float("{:.1f}".format(residue_pct)),
         },
         "suggestions": suggestions,
         "unit": "kg CO2e"

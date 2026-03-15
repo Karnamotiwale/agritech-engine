@@ -34,7 +34,7 @@ def get_weather(farm_id):
             return {
                 "temperature": item.get("main", {}).get("temp", 30),
                 "humidity": item.get("main", {}).get("humidity", 65),
-                "rain_probability": round(item.get("pop", 0.2) * 100, 1)
+                "rain_probability": float("{:.1f}".format(item.get("pop", 0.2) * 100))
             }
         else:
             logging.error(f"Weather API Error: {r.status_code}")

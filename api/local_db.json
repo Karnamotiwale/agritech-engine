@@ -1,13 +1,6 @@
 {
     "farms": [
         {
-            "farm_name": "Local JSON Farm",
-            "total_land_acres": 100,
-            "latitude": 30.0,
-            "longitude": 75.0,
-            "id": "a84fb431-108e-4ac8-9075-a8c8da74568c"
-        },
-        {
             "farm_name": "Valley",
             "total_land_acres": 10,
             "latitude": 48.65450859069824,
@@ -16,14 +9,6 @@
         }
     ],
     "crops": [
-        {
-            "farm_id": "a84fb431-108e-4ac8-9075-a8c8da74568c",
-            "crop_name": "Local JSON Wheat",
-            "crop_type": "wheat",
-            "sowing_date": "2024-01-01",
-            "seeds_planted": 500,
-            "id": "8a049334-9c06-43a6-8772-b1cd31be5da8"
-        },
         {
             "farm_id": "85c6e097-2fe8-4995-a76e-5b0406fa5cd6",
             "crop_name": "Rice",
