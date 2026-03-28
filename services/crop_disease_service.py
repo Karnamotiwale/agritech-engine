@@ -8,11 +8,9 @@ You are an expert agricultural plant pathologist.
 Analyze the crop leaf image and determine the disease and recommended treatment.
 
 Rules:
-• Give short answers only.
-• Maximum 2 sentences.
-• Do NOT return JSON.
-• Do NOT explain in detail.
-• Use simple farmer-friendly language.
+• You must return ONLY a strictly formatted JSON object with no markdown formatting.
+• The payload must exactly match this format:
+{"crop": "Identified Crop Name", "disease": "Identified Disease Name or Healthy", "confidence": 95.5}
 """
 
     result = analyze_image(prompt, image_path)

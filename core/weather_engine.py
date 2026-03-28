@@ -1,6 +1,8 @@
 import requests
 import os
 import logging
+from core.supabase_client import supabase
+from api.local_db_utils import get_all_farms
 
 def get_weather(farm_id):
     """
@@ -9,6 +11,22 @@ def get_weather(farm_id):
     """
     WEATHER_API = os.getenv("OPENWEATHER_API_KEY") or os.getenv("WEATHER_API")
     
+    lat, lon = 28.6, 77.2
+    try:
+        if farm_id and farm_id != "default":
+            res = supabase.table("farms").select("latitude, longitude").eq("id", farm_id).execute()
+            if res.data and len(res.data) > 0:
+                lat = float(res.data[0].get("latitude") or 28.6)
+                lon = float(res.data[0].get("longitude") or 77.2)
+            else:
+                for f in get_all_farms():
+                    if f.get("id") == farm_id:
+                        lat = float(f.get("latitude") or 28.6)
+                        lon = float(f.get("longitude") or 77.2)
+                        break
+    except Exception as e:
+        logging.error(f"Error fetching farm coordinates for weather: {e}")
+        
     try:
         if not WEATHER_API:
             # Fallback mock weather if missing API key
@@ -20,8 +38,8 @@ def get_weather(farm_id):
 
         url = "https://api.openweathermap.org/data/2.5/forecast"
         params = {
-            "lat": 28.6,
-            "lon": 77.2,
+            "lat": lat,
+            "lon": lon,
             "appid": WEATHER_API,
             "units": "metric",
             "cnt": 1

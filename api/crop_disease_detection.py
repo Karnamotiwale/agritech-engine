@@ -1,4 +1,5 @@
 import os
+import json
 from flask import Blueprint, request, jsonify
 from services.crop_disease_service import analyze_crop_disease
 
@@ -48,9 +49,34 @@ def detect_disease():
         except:
             pass
 
-        return jsonify({
-            "analysis": result
-        }), 200
+        try:
+            # Strip markdown if present
+            clean_result = result.strip()
+            if clean_result.startswith('```json'):
+                clean_result = clean_result[len('```json'):]
+            if clean_result.endswith('```'):
+                clean_result = clean_result[:-3]
+            clean_result = clean_result.strip()
+            
+            parsed_result = json.loads(clean_result)
+            
+            # Map remedies and preventions
+            from core.organic_remedy_engine import generate_organic_remedy
+            remedy_info = generate_organic_remedy(
+                parsed_result.get("crop", "Unknown"), 
+                parsed_result.get("disease", "Unknown")
+            )
+            parsed_result["organic_remedies"] = remedy_info["organic_remedies"]
+            parsed_result["prevention"] = remedy_info["prevention"]
+            
+            return jsonify(parsed_result), 200
+        except Exception as json_err:
+            return jsonify({
+                "crop": "Unknown",
+                "disease": "Analysis error or unrecognized format",
+                "confidence": 0,
+                "raw": result
+            }), 200
         
     except Exception as e:
         return jsonify({"error": str(e)}), 500

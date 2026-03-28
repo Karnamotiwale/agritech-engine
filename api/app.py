@@ -61,7 +61,7 @@ from flasgger import Swagger  # type: ignore
 app = Flask(__name__)
 swagger = Swagger(app)
 # 1. Enable CORS for frontend
-CORS(app, resources={r"/*": {"origins": ["http://localhost:5173"]}}, supports_credentials=True)
+CORS(app, resources={r"/*": {"origins": ["http://localhost:5173", "http://localhost:3000"]}}, supports_credentials=True)
 
 # --------------------------------------------------
 # REGISTER BLUEPRINTS
