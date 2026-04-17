@@ -70,9 +70,26 @@ print("Starting Flask app...")
 print("Environment loaded successfully")
 
 # 1. Enable CORS for frontend
-cors_origins_env = os.environ.get("CORS_ORIGINS", "http://localhost:5173,http://localhost:3000")
+cors_origins_env = os.environ.get(
+    "CORS_ORIGINS", 
+    "https://agri-ebon.vercel.app,http://localhost:5173,http://localhost:3000"
+)
 cors_origins = [origin.strip() for origin in cors_origins_env.split(",") if origin.strip()]
-CORS(app, resources={r"/*": {"origins": cors_origins}}, supports_credentials=True)
+
+CORS(app, resources={
+    r"/api/*": {
+        "origins": cors_origins,
+        "methods": ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+        "allow_headers": ["Content-Type", "Authorization", "Access-Control-Allow-Credentials"],
+        "expose_headers": ["Content-Type", "Authorization"]
+    },
+    r"/*": {
+        "origins": cors_origins,
+        "methods": ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+        "allow_headers": ["Content-Type", "Authorization", "Access-Control-Allow-Credentials"],
+        "expose_headers": ["Content-Type", "Authorization"]
+    }
+}, supports_credentials=True)
 
 # --------------------------------------------------
 # REGISTER BLUEPRINTS
