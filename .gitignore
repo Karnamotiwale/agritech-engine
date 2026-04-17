@@ -1,10 +1,15 @@
 # Python
 venv/
+.venv/
+env/
 __pycache__/
 *.pyc
+*.pyo
+*.egg-info/
 
 # Environment
 .env
+.env.local
 
 # Build
 dist/
@@ -13,6 +18,38 @@ build/
 # IDE
 .vscode/
 .idea/
+*.swp
+*.swo
 
-# AI Models
+# AI Models (large binaries)
 models/cropnet/
+
+# Temp files
+temp/
+*.tmp
+
+# Debug & test output
+debug_output.txt
+debug_output_utf8.txt
+error.txt
+flake8_errors.txt
+out.log
+test_cycle_out.txt
+test_cycle_out_utf8.txt
+routes.txt
+routes_utf8.txt
+models.txt
+venv_freeze.txt
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Installers
+*.exe
+
+# Vercel
+.vercel/
+
+# Schema dumps
+schema.json

@@ -7,7 +7,6 @@ import os
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from dotenv import load_dotenv  # type: ignore
-import os
 
 load_dotenv(os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), ".env"))
 
@@ -149,7 +148,7 @@ def handle_exception(e):
     logger.error(f"Unhandled Exception: {str(e)}", exc_info=True)
     return jsonify({
         "status": "error",
-        "message": str(e)
+        "message": "An internal error occurred. Please try again."
     }), 200
 
 # --------------------------------------------------
@@ -278,7 +277,7 @@ def crop_journey():
     try:
         crop = validate_crop(request.json.get("crop"))
     except ValueError as e:
-        return jsonify({"error": str(e)}), 400
+        return jsonify({"error": "An internal error occurred"}), 400
     if not crop:
         return jsonify({"error": "Crop name required"}), 400
 
@@ -324,7 +323,7 @@ def crop_stages():
     try:
         crop = validate_crop(request.json.get("crop"))
     except ValueError as e:
-        return jsonify({"error": str(e)}), 400
+        return jsonify({"error": "An internal error occurred"}), 400
 
     from core.crop_constants import CROP_LIFECYCLES  # type: ignore
     stages = CROP_LIFECYCLES.get(crop, [])
@@ -443,7 +442,7 @@ def pesticide_recommend():
     except Exception as e:
         return jsonify({
             "status": "error",
-            "message": f"Pesticide recommendation failed: {str(e)}"
+            "message": "Pesticide recommendation failed due to an internal error"
         }), 200
 
 
@@ -472,7 +471,7 @@ def ai_status():
             "last_sync": datetime.now().isoformat()
         }), 200
     except Exception as e:
-        return jsonify({"status": "error", "message": str(e)}), 200
+        return jsonify({"status": "error", "message": "An internal error occurred"}), 200
 
 # --------------------------------------------------
 # GEMINI AI STATUS ENDPOINT
@@ -492,7 +491,7 @@ def gemini_status():
             "status": "online" if client else "offline"
         }), 200
     except Exception as e:
-        return jsonify({"status": "error", "message": str(e)}), 200
+        return jsonify({"status": "error", "message": "An internal error occurred"}), 200
 
 # --------------------------------------------------
 # DECISION LOG (Phase 3)
@@ -638,7 +637,7 @@ def get_sensors():
             }), 200
 
     except Exception as e:
-        return jsonify({"error": str(e)}), 400
+        return jsonify({"error": "An internal error occurred"}), 400
 
 # --------------------------------------------------
 # RESOURCE ANALYTICS API (For Financial Summary)
@@ -662,7 +661,7 @@ def resource_analytics():
             "cost": { "estimated": 14250, "currency": "INR" }
         }), 200
     except Exception as e:
-        return jsonify({"error": str(e)}), 400
+        return jsonify({"error": "An internal error occurred"}), 400
 
 # --------------------------------------------------
 # ANALYTICS DASHBOARD API
@@ -702,7 +701,7 @@ def analytics():
     except Exception as e:
         print(f"Analytics endpoint error: {e}")
         return jsonify({
-            "error": str(e),
+            "error": "An internal error occurred",
             "policy_state": [],
             "q_table": [],
             "model_accuracy": 0.88,
@@ -778,7 +777,7 @@ def crop_details():
         })
 
     except Exception as e:
-        return jsonify({"error": str(e)}), 400
+        return jsonify({"error": "An internal error occurred"}), 400
 
 
 

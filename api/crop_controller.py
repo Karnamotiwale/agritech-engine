@@ -52,4 +52,4 @@ def create_crop():
             return jsonify(add_local_crop(crop_data)), 201
             
     except Exception as e:
-        return jsonify({"status": "error", "message": str(e)}), 500
+        return jsonify({"status": "error", "message": "An internal error occurred"}), 500

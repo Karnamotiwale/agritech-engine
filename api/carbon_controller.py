@@ -105,4 +105,4 @@ def save_carbon_inputs():
         return jsonify({'status': 'saved', 'footprint': result}), 201
 
     except Exception as e:
-        return jsonify({'status': 'error', 'message': str(e)}), 500
+        return jsonify({'status': 'error', 'message': 'An internal error occurred'}), 500

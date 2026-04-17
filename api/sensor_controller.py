@@ -46,7 +46,7 @@ def receive_sensor_data():
         return jsonify({"status": "ok", "decision": decision}), 200
 
     except Exception as e:
-        return jsonify({"status": "error", "message": str(e)}), 500
+        return jsonify({"status": "error", "message": "An internal error occurred"}), 500
 
 
 @sensor_api.route("/api/v1/sensors/live/<farm_id>", methods=["GET"])
@@ -76,7 +76,7 @@ def get_live_sensor(farm_id):
         )
         return jsonify(data.data), 200
     except Exception as e:
-        return jsonify({"status": "error", "message": str(e)}), 500
+        return jsonify({"status": "error", "message": "An internal error occurred"}), 500
 
 
 # ─────────────────────────────────────────────────────────────
@@ -138,7 +138,7 @@ def add_sensor_data():
         return jsonify({"status": "saved", "data": payload}), 200
 
     except Exception as e:
-        return jsonify({"status": "error", "message": str(e)}), 500
+        return jsonify({"status": "error", "message": "An internal error occurred"}), 500
 
 
 # ─────────────────────────────────────────────────────────────
@@ -177,7 +177,7 @@ def get_latest_sensor():
             return jsonify({"status": "no_data", "message": "No sensor readings found yet"}), 404
 
     except Exception as e:
-        return jsonify({"status": "error", "message": str(e)}), 500
+        return jsonify({"status": "error", "message": "An internal error occurred"}), 500
 
 
 # ─────────────────────────────────────────────────────────────
@@ -216,4 +216,4 @@ def get_sensor_history():
         return jsonify(result.data), 200
 
     except Exception as e:
-        return jsonify({"status": "error", "message": str(e)}), 500
+        return jsonify({"status": "error", "message": "An internal error occurred"}), 500

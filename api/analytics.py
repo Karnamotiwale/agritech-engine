@@ -2,7 +2,7 @@
 from flask import Blueprint, jsonify, request
 from core.supabase_client import supabase
 from core.ai_engine.analytics_predictor import AnalyticsPredictor
-from datetime import datetime, timedelta
+from datetime import datetime
 
 analytics_bp = Blueprint('analytics', __name__)
 predictor = AnalyticsPredictor()
@@ -34,8 +34,8 @@ def get_overview():
         print(f"Analytics Error: {e}")
         return jsonify({
             "summary": {},
-            "error": str(e),
-            "status": "error"
+            "status": "error",
+            "message": "Could not load analytics data."
         })
 
 @analytics_bp.route('/api/v1/analytics/range-forecast', methods=['GET'])
@@ -64,7 +64,7 @@ def get_forecast():
         return jsonify({
             "forecast": [],
             "status": "error",
-            "error": str(e)
+            "message": "Could not generate forecast."
         })
 
 @analytics_bp.route('/api/v1/analytics/crop-health', methods=['GET'])
@@ -103,5 +103,5 @@ def get_crop_health():
         
     except Exception as e:
         print(f"Health Error: {e}")
-        return jsonify({"crops": [], "error": str(e)})
+        return jsonify({"crops": [], "message": "Could not load crop health data."})
 

@@ -1,9 +1,11 @@
+import logging
 from flask import Blueprint, jsonify, request
 from core.supabase_client import supabase
 from core.weather_engine import get_weather
 from core.decision_engine import run_decision_engine
 from api.local_db_utils import get_all_farms, add_local_farm
 
+logger = logging.getLogger(__name__)
 farm_api = Blueprint("farm_api", __name__)
 
 @farm_api.route("/api/v1/farms", methods=["GET", "OPTIONS"])
@@ -12,21 +14,21 @@ def get_farms():
         return jsonify({}), 200
 
     try:
-        print("Fetching farms...")
+        logger.info("Fetching farms...")
         
         try:
             # Fetch farms from database (ignoring user_id for simplicity unless auth is setup)
             result = supabase.table("farms").select("*").execute()
             db_farms = result.data if hasattr(result, "data") and result.data else []
-            print("Supabase farms response:", len(db_farms), "records")
+            logger.info("Supabase farms response: %d records", len(db_farms))
         except Exception as e:
-            print(f"[Warning] Supabase fetch failed: {e}")
+            logger.warning("[Farm] Supabase fetch failed: %s", e)
             db_farms = []
 
         try:
             local_farms = get_all_farms()
         except Exception as e:
-            print(f"[Warning] local_db fetch failed: {e}")
+            logger.warning("[Farm] local_db fetch failed: %s", e)
             local_farms = []
 
         # Merge, deduplicate by ID (Supabase wins over local for same ID)
@@ -51,9 +53,10 @@ def get_farms():
                     f["total_land_ha"] = 0.0
 
         return jsonify(all_farms), 200
+
     except Exception as e:
-        print(f"Critical error in get_farms: {e}")
-        return jsonify({"success": False, "error": str(e), "data": []}), 500
+        logger.error("Critical error in get_farms: %s", e)
+        return jsonify({"success": False, "error": "An internal error occurred", "data": []}), 500
 
 @farm_api.route("/api/v1/farms", methods=["POST"])
 def create_farm():
@@ -80,17 +83,17 @@ def create_farm():
             # user_id is now nullable — this insert fires Supabase Realtime
             result = supabase.table("farms").insert(farm_data).execute()
             if result and result.data:
-                print(f"[Farm] Created in Supabase: {farm_name}")
+                logger.info("[Farm] Created in Supabase: %s", farm_name)
                 return jsonify(result.data[0]), 201
         except Exception as db_err:
-            print(f"[Farm] Supabase insert failed ({db_err}), falling back to local_db")
+            logger.warning("[Farm] Supabase insert failed (%s), falling back to local_db", db_err)
 
         # Local fallback (preserves offline resilience)
         local = add_local_farm(dict(farm_data))
         return jsonify(local), 201
 
     except Exception as e:
-        return jsonify({"status": "error", "message": str(e)}), 500
+        return jsonify({"status": "error", "message": "An internal error occurred"}), 500
 
 @farm_api.route("/api/v1/farm/dashboard/<farm_id>", methods=["GET"])
 def get_farm_dashboard(farm_id):
@@ -166,4 +169,4 @@ def get_farm_dashboard(farm_id):
         }), 200
 
     except Exception as e:
-        return jsonify({"status": "error", "message": str(e)}), 500
+        return jsonify({"status": "error", "message": "An internal error occurred"}), 500

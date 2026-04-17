@@ -15,5 +15,5 @@ def disease_advice():
         short_message = f"{disease_name} detected on {crop}. Apply standard treatment and prune infected leaves."
         return jsonify({"message": short_message}), 200
     except Exception as e:
-        return jsonify({"error": str(e)}), 500
+        return jsonify({"error": "An internal error occurred"}), 500
 

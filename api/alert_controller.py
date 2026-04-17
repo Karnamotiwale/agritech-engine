@@ -120,7 +120,7 @@ def analyze_sensor():
         return jsonify({"alerts": alerts, "count": len(alerts)}), 200
     except Exception as e:
         logging.error(f"Analyze alert error: {e}")
-        return jsonify({"error": str(e)}), 500
+        return jsonify({"error": "An internal error occurred"}), 500
 
 
 # ----------------------------------------------------------------

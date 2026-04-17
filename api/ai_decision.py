@@ -55,4 +55,4 @@ def irrigation_decision():
         decision = decide_action(ml_prediction, safe_data)
         return jsonify(decision), 200
     except Exception as e:
-        return jsonify({"error": str(e)}), 500
+        return jsonify({"error": "An internal error occurred"}), 500

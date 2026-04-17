@@ -1,6 +1,8 @@
+import logging
 from flask import Blueprint, request, jsonify
 from core.supabase_client import supabase
 
+logger = logging.getLogger(__name__)
 valve_api = Blueprint("valve_api", __name__)
 
 @valve_api.route("/api/v1/valves/open", methods=["POST"])
@@ -32,7 +34,7 @@ def open_valve():
             "duration": data.get("duration", 10)
         }
 
-        print(f"Logging valve OPEN action: {irrigation}")
+        logger.info("[Valve] Logging OPEN action for farm_id=%s", irrigation.get('farm_id'))
         supabase.table("irrigation_actions").insert(irrigation).execute()
         
         try:
@@ -61,9 +63,9 @@ def open_valve():
                 "weather_condition": "Unknown"
             }
             supabase.table("field_activities").insert(activity_data).execute()
-            print("Valve OPEN action logged successfully in new tables.")
+            logger.info("[Valve] OPEN action logged to irrigation_logs and field_activities")
         except Exception as err:
-            print(f"Failed to log to new schema: {err}")
+            logger.warning("[Valve] Failed to log to new schema: %s", err)
 
 
         return jsonify({
@@ -72,7 +74,7 @@ def open_valve():
         }), 200
 
     except Exception as e:
-        return jsonify({"status": "error", "message": str(e)}), 500
+        return jsonify({"status": "error", "message": "An internal error occurred"}), 500
 
 @valve_api.route("/api/v1/valves/stop", methods=["POST"])
 def close_valve():
@@ -102,11 +104,11 @@ def close_valve():
             "action": "STOP"
         }
 
-        print(f"Logging valve STOP action: {irrigation}")
+        logger.info("[Valve] Logging STOP action for farm_id=%s", irrigation.get('farm_id'))
         supabase.table("irrigation_actions").insert(irrigation).execute()
-        print("Valve STOP action logged successfully.")
+        logger.info("[Valve] STOP action logged successfully.")
 
         return jsonify({"command": "STOP"}), 200
 
     except Exception as e:
-        return jsonify({"status": "error", "message": str(e)}), 500
+        return jsonify({"status": "error", "message": "An internal error occurred"}), 500

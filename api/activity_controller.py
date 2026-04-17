@@ -22,7 +22,7 @@ def activities_collection():
             )
             return jsonify(response.data), 200
         except Exception as e:
-            return jsonify({"error": str(e)}), 500
+            return jsonify({"error": "An internal error occurred"}), 500
     else:  # POST
         try:
             data = request.json
@@ -31,7 +31,7 @@ def activities_collection():
             response = supabase.table("field_activities").insert(data).execute()
             return jsonify(response.data[0] if response.data else {}), 201
         except Exception as e:
-            return jsonify({"error": str(e)}), 500
+            return jsonify({"error": "An internal error occurred"}), 500
 
 
 
@@ -50,7 +50,7 @@ def get_activities_by_field(field_id):
         response = query.order("created_at", desc=True).limit(10).execute()
         return jsonify(response.data), 200
     except Exception as e:
-        return jsonify({"error": str(e)}), 500
+        return jsonify({"error": "An internal error occurred"}), 500
 
 
 @activity_bp.route("/api/v1/irrigation/log", methods=["POST"])
@@ -91,7 +91,7 @@ def log_irrigation():
 
         return jsonify({"message": "Irrigation logged successfully"}), 201
     except Exception as e:
-        return jsonify({"error": str(e)}), 500
+        return jsonify({"error": "An internal error occurred"}), 500
 
 
 @activity_bp.route("/api/v1/fertilization/log", methods=["POST"])
@@ -131,4 +131,4 @@ def log_fertilization():
 
         return jsonify({"message": "Fertilization logged successfully"}), 201
     except Exception as e:
-        return jsonify({"error": str(e)}), 500
+        return jsonify({"error": "An internal error occurred"}), 500
