@@ -60,8 +60,16 @@ from core.crop_constants import ALLOWED_CROPS, CROP_LIFECYCLES, validate_crop, s
 from flasgger import Swagger  # type: ignore
 app = Flask(__name__)
 swagger = Swagger(app)
+
+import logging
+# Basic Logging setup
+logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+logger = logging.getLogger(__name__)
+
 # 1. Enable CORS for frontend
-CORS(app, resources={r"/*": {"origins": ["http://localhost:5173", "http://localhost:3000"]}}, supports_credentials=True)
+cors_origins_env = os.environ.get("CORS_ORIGINS", "http://localhost:5173,http://localhost:3000")
+cors_origins = [origin.strip() for origin in cors_origins_env.split(",") if origin.strip()]
+CORS(app, resources={r"/*": {"origins": cors_origins}}, supports_credentials=True)
 
 # --------------------------------------------------
 # REGISTER BLUEPRINTS
@@ -124,6 +132,7 @@ except Exception as e:
 # 2. Global Error Handler - Force JSON responses
 @app.errorhandler(Exception)
 def handle_exception(e):
+    logger.error(f"Unhandled Exception: {str(e)}", exc_info=True)
     return jsonify({
         "status": "error",
         "message": str(e)
@@ -148,6 +157,7 @@ except Exception as e:
 # HEALTH CHECK
 # --------------------------------------------------
 @app.route("/", methods=["GET"])
+@app.route("/health", methods=["GET"])
 def health():
     """
     Backend status check

@@ -1,9 +1,11 @@
 import time
 import random
 import requests
+import os
 from datetime import datetime, timedelta
 
-API_URL = "http://127.0.0.1:5000/decide"
+base_url = os.environ.get("BASE_URL", "http://127.0.0.1:5000")
+API_URL = f"{base_url}/decide"
 ALLOWED_CROPS = ["rice", "wheat", "maize", "sugarcane", "pulses"]
 
 def generate_sensor_data(crop):
@@ -46,7 +48,7 @@ while True:
         print("⏰ [Daily Cycle] Recalculating farm-wide yield trends & RL rewards...")
         for crop in ALLOWED_CROPS:
             try:
-                requests.post("http://127.0.0.1:5000/yield/predict", json={"crop": crop})
+                requests.post(f"{base_url}/yield/predict", json={"crop": crop})
             except: pass
         last_daily_run = now
 
