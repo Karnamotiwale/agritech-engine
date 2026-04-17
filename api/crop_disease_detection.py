@@ -37,17 +37,36 @@ def detect_disease():
         image = request.files["image"]
         if image.filename == '':
             return jsonify({"error": "No selected file"}), 400
-
+        # Logging initial receipt of request
+        import time, logging
+        logger = logging.getLogger(__name__)
+        start_time = time.time()
+        logger.info(f"[VISION API] Request received for {image.filename} - Started at {start_time}")
+        
         image_path = f"temp/{image.filename}"
         image.save(image_path)
 
         result = analyze_crop_disease(image_path)
+        
+        # Logging TTFB boundary completion
+        end_time = time.time()
+        logger.info(f"[VISION API] Gemini inference completed in {round(end_time - start_time, 2)}s")
         
         # Cleanup
         try:
             os.remove(image_path)
         except:
             pass
+
+        # Intercept AI service busy or vision failure
+        if "AI service busy" in result or "Vision analysis failed" in result:
+            return jsonify({
+                "success": False,
+                "message": "AI service busy. Please retry shortly.",
+                "crop": "Error",
+                "disease": "Error",
+                "confidence": 0
+            }), 200
 
         try:
             # Strip markdown if present
@@ -68,15 +87,21 @@ def detect_disease():
             )
             parsed_result["organic_remedies"] = remedy_info["organic_remedies"]
             parsed_result["prevention"] = remedy_info["prevention"]
+            parsed_result["success"] = True
             
             return jsonify(parsed_result), 200
         except Exception as json_err:
             return jsonify({
+                "success": False,
+                "message": "Failed to parse AI response. Please retry.",
                 "crop": "Unknown",
-                "disease": "Analysis error or unrecognized format",
+                "disease": "Analysis error",
                 "confidence": 0,
                 "raw": result
             }), 200
         
     except Exception as e:
-        return jsonify({"error": str(e)}), 500
+        return jsonify({
+            "success": False,
+            "message": "AI service busy. Please retry shortly."
+        }), 200
