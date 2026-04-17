@@ -2,7 +2,6 @@ from flask import Blueprint, request, jsonify  # type: ignore
 from services.crop_disease_service import analyze_crop_disease  # type: ignore
 from core.response_formatter import short_response
 import os
-import json
 
 cropnet_bp = Blueprint("cropnet_bp", __name__)
 

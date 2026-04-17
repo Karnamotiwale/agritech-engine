@@ -13,23 +13,18 @@ load_dotenv(os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file_
 
 from flask import Flask, request, jsonify  # type: ignore
 from flask_cors import CORS  # type: ignore
-import random
 
 # --------------------------------------------------
 # Advisory & Planning Engines
 # --------------------------------------------------
-from core.fertilizer_engine import recommend_fertilizer  # type: ignore
-from core.pest_disease_engine import generate_pest_disease_advisory  # type: ignore
-from core.irrigation_planner import plan_irrigation  # type: ignore
 from core.pesticide_recommendation_engine import get_pesticide_recommendation, get_stage_specific_advisory  # type: ignore
 
 # --------------------------------------------------
 # Core AI Engines
 # --------------------------------------------------
-from core.ml_model import IrrigationMLModel  # type: ignore
 from core.decision_engine import decide_action  # type: ignore
 from core.regret_engine import calculate_regret  # type: ignore
-from core.rl_engine import update_q_table, get_q_values, get_state, get_q_table  # type: ignore
+from core.rl_engine import update_q_table, get_state, get_q_table  # type: ignore
 
 # Mock policy state function as requested
 def get_policy_state():
@@ -44,15 +39,14 @@ def get_policy_state():
         }
     }
 from core.xai_engine import generate_explanation  # type: ignore
-from core.crop_rotation_engine import recommend_next_crop  # type: ignore
 
 # --------------------------------------------------
 # Crop Tracing & Yield Engines
 # --------------------------------------------------
-from core.crop_trace_engine import log_crop_stage  # type: ignore
-from core.yield_prediction_engine import predict_yield  # type: ignore
 from core.supabase_client import supabase  # type: ignore
-from core.crop_constants import ALLOWED_CROPS, CROP_LIFECYCLES, validate_crop, safe_value  # type: ignore
+from core.crop_constants import validate_crop  # type: ignore
+
+from datetime import datetime
 
 # --------------------------------------------------
 # Flask app

@@ -25,67 +25,77 @@ def get_client():
     return _client
 
 gemini_lock = threading.Lock()
-last_call_time = 0
-MIN_DELAY = 2
+
+def with_retry(max_retries=3, base_delay=2, max_delay=10):
+    """
+    Exponential backoff retry decorator for Gemini API calls.
+    """
+    def decorator(func):
+        def wrapper(*args, **kwargs):
+            retries = 0
+            while retries <= max_retries:
+                try:
+                    return func(*args, **kwargs)
+                except Exception as e:
+                    err_str = str(e)
+                    # Only retry on 503 or 429 quota/overload errors
+                    if "429" in err_str or "503" in err_str or "quota" in err_str.lower() or "overloaded" in err_str.lower() or "unavailable" in err_str.lower():
+                        if retries == max_retries:
+                            print(f"[Gemini] Max retries reached for {func.__name__}. Error: {e}")
+                            break
+                        delay = min(base_delay * (2 ** retries), max_delay)
+                        print(f"[Gemini] Error {e}. Retrying in {delay}s... ({retries+1}/{max_retries})")
+                        time.sleep(delay)
+                        retries += 1
+                    else:
+                        print(f"[Gemini] Unrecoverable error in {func.__name__}: {e}")
+                        break
+            # Fallback strings if all retries fail or an unhandled exception occurred
+            if "analyze_image" in func.__name__:
+                return "Vision analysis failed: AI service busy, please retry shortly."
+            return "AI service busy, please retry shortly."
+        return wrapper
+    return decorator
+
+@with_retry()
+def _call_generate_content(client, model, contents):
+    """Inner core strictly for generation, isolated for retry loops."""
+    return client.models.generate_content(model=model, contents=contents).text
 
 def generate_ai_response(prompt, image=None):
     """
     Centralized Gemini caller using google-genai.
     """
-    global last_call_time
-    
     client = get_client()
     if not client:
         return "AI service temporarily unavailable (API key missing)"
 
     with gemini_lock:
-        now = time.time()
-        if now - last_call_time < MIN_DELAY:
-            time.sleep(MIN_DELAY - (now - last_call_time))
-            
-        last_call_time = time.time()
-
         try:
-            model_name = "gemini-pro-latest" if image else "gemini-flash-latest"
+            model_name = "gemini-2.5-pro" if image else "gemini-2.5-flash"
             contents = [prompt]
             if image:
                 contents.append(image)
                 
-            response = client.models.generate_content(
-                model=model_name,
-                contents=contents
-            )
-            return response.text
+            return _call_generate_content(client, model=model_name, contents=contents)
         except Exception as e:
             print("Gemini error:", e)
-            return "AI service temporarily unavailable"
+            return "AI service busy, please retry shortly."
 
 def ask_gemini(prompt):
     """
     Used primarily by the chatbot and advisory endpoints.
     """
-    global last_call_time
-    
     client = get_client()
     if not client:
         return "AI advisory service temporarily unavailable (API key missing)."
         
     with gemini_lock:
-        now = time.time()
-        if now - last_call_time < MIN_DELAY:
-            time.sleep(MIN_DELAY - (now - last_call_time))
-            
-        last_call_time = time.time()
-        
         try:
-            response = client.models.generate_content(
-                model="gemini-flash-latest",
-                contents=prompt
-            )
-            return response.text
+            return _call_generate_content(client, model="gemini-2.5-flash", contents=prompt)
         except Exception as e:
             print("Gemini Error:", e)
-            return "AI advisory service temporarily unavailable."
+            return "AI service busy, please retry shortly."
 
 # --------------------------------------------------
 # VISION ANALYSIS FUNCTION
@@ -119,14 +129,11 @@ def analyze_image(prompt, image_path):
         except Exception as e:
             return f"Vision analysis failed: Invalid image format ({str(e)})"
             
-        # Using Google GenAI SDK direct embedded image support (no upload API required)
         logger.info(f"Analyzing {image_path} with Gemini directly...")
-        response = client.models.generate_content(
-            model='gemini-2.5-flash',
-            contents=[prompt, img]
-        )
-        return response.text
+        
+        # Wrapped for retries natively inside _call_generate_content
+        return _call_generate_content(client, model="gemini-2.5-flash", contents=[prompt, img])
     except Exception as e:
         logger.error(f"Gemini Vision API error: {str(e)}")
-        return f"Vision analysis failed: {str(e)}"
+        return "Vision analysis failed: AI service busy, please retry shortly."
 
