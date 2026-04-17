@@ -9,13 +9,20 @@ load_dotenv()
 from google import genai
 from google.genai import types
 
-# Ensure API key is loaded
-api_key = os.getenv("GEMINI_API_KEY")
-if not api_key:
-    print("Warning: GEMINI_API_KEY is not set. Gemini features will be disabled.")
+_client = None
 
-# Initialize the new genai client correctly
-client = genai.Client(api_key=api_key) if api_key else None
+def get_client():
+    global _client
+    if _client is None:
+        api_key = os.getenv("GEMINI_API_KEY")
+        if not api_key:
+            print("Warning: GEMINI_API_KEY is not set. Gemini features will be disabled.")
+            return None
+        try:
+            _client = genai.Client(api_key=api_key)
+        except Exception as e:
+            print(f"Warning: Failed to initialize Gemini API: {e}")
+    return _client
 
 gemini_lock = threading.Lock()
 last_call_time = 0
@@ -27,6 +34,7 @@ def generate_ai_response(prompt, image=None):
     """
     global last_call_time
     
+    client = get_client()
     if not client:
         return "AI service temporarily unavailable (API key missing)"
 
@@ -58,6 +66,7 @@ def ask_gemini(prompt):
     """
     global last_call_time
     
+    client = get_client()
     if not client:
         return "AI advisory service temporarily unavailable (API key missing)."
         
@@ -86,6 +95,7 @@ def analyze_image(prompt, image_path):
     """
     Used by the crop disease detection endpoints.
     """
+    client = get_client()
     if not client:
         return "Vision analysis failed: API key missing"
         

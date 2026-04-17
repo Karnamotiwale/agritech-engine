@@ -66,6 +66,9 @@ import logging
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
 logger = logging.getLogger(__name__)
 
+print("Starting Flask app...")
+print("Environment loaded successfully")
+
 # 1. Enable CORS for frontend
 cors_origins_env = os.environ.get("CORS_ORIGINS", "http://localhost:5173,http://localhost:3000")
 cors_origins = [origin.strip() for origin in cors_origins_env.split(",") if origin.strip()]
