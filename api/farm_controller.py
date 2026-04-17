@@ -6,13 +6,28 @@ from api.local_db_utils import get_all_farms, add_local_farm
 
 farm_api = Blueprint("farm_api", __name__)
 
-@farm_api.route("/api/v1/farms", methods=["GET"])
+@farm_api.route("/api/v1/farms", methods=["GET", "OPTIONS"])
 def get_farms():
+    if request.method == "OPTIONS":
+        return jsonify({}), 200
+
     try:
-        # Fetch farms from database (ignoring user_id for simplicity unless auth is setup)
-        result = supabase.table("farms").select("*").execute()
-        db_farms = result.data if result and result.data else []
-        local_farms = get_all_farms()
+        print("Fetching farms...")
+        
+        try:
+            # Fetch farms from database (ignoring user_id for simplicity unless auth is setup)
+            result = supabase.table("farms").select("*").execute()
+            db_farms = result.data if hasattr(result, "data") and result.data else []
+            print("Supabase farms response:", len(db_farms), "records")
+        except Exception as e:
+            print(f"[Warning] Supabase fetch failed: {e}")
+            db_farms = []
+
+        try:
+            local_farms = get_all_farms()
+        except Exception as e:
+            print(f"[Warning] local_db fetch failed: {e}")
+            local_farms = []
 
         # Merge, deduplicate by ID (Supabase wins over local for same ID)
         seen_ids = set()
@@ -26,11 +41,19 @@ def get_farms():
         # Standardize units for output
         for f in all_farms:
             if "total_land_acres" in f:
-                f["total_land_ha"] = round(f.pop("total_land_acres") * 0.404686, 2)
+                try:
+                    val = f.pop("total_land_acres")
+                    if val is not None:
+                        f["total_land_ha"] = round(float(val) * 0.404686, 2)
+                    else:
+                        f["total_land_ha"] = 0.0
+                except (ValueError, TypeError):
+                    f["total_land_ha"] = 0.0
 
         return jsonify(all_farms), 200
     except Exception as e:
-        return jsonify(get_all_farms()), 200
+        print(f"Critical error in get_farms: {e}")
+        return jsonify({"success": False, "error": str(e), "data": []}), 500
 
 @farm_api.route("/api/v1/farms", methods=["POST"])
 def create_farm():

@@ -95,20 +95,38 @@ def analyze_image(prompt, image_path):
     """
     Used by the crop disease detection endpoints.
     """
+    import logging
+    logger = logging.getLogger(__name__)
+
     client = get_client()
     if not client:
         return "Vision analysis failed: API key missing"
         
-    # No lock required specifically for this as it's synchronous upload
     try:
-        # With the new google-genai, we can upload files using client.files.upload
-        myfile = client.files.upload(file=image_path)
-        
+        if not os.path.exists(image_path):
+            return "Vision analysis failed: Image file not found"
+            
+        file_size_mb = os.path.getsize(image_path) / (1024 * 1024)
+        if file_size_mb > 5:
+            return "Vision analysis failed: File too large (max 5MB)"
+            
+        import PIL.Image
+        try:
+            img = PIL.Image.open(image_path)
+            # Validate it's an image
+            img.verify()
+            img = PIL.Image.open(image_path) # Reopen after verify
+        except Exception as e:
+            return f"Vision analysis failed: Invalid image format ({str(e)})"
+            
+        # Using Google GenAI SDK direct embedded image support (no upload API required)
+        logger.info(f"Analyzing {image_path} with Gemini directly...")
         response = client.models.generate_content(
-            model='gemini-flash-latest',
-            contents=[prompt, myfile]
+            model='gemini-2.5-flash',
+            contents=[prompt, img]
         )
         return response.text
     except Exception as e:
+        logger.error(f"Gemini Vision API error: {str(e)}")
         return f"Vision analysis failed: {str(e)}"
 
