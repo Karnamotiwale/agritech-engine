@@ -1,18 +1,65 @@
-from flask import Blueprint, request, jsonify  # type: ignore
-import requests
-import os
-from dotenv import load_dotenv
-
-load_dotenv()
+"""
+AI Advisory Route
+==================
+Uses the centralized ask_gemini() client — never calls Gemini REST API directly.
+Includes keyword-based fallback tips when AI is unavailable.
+"""
+from flask import Blueprint, request, jsonify
 
 ai_advisory_bp = Blueprint("ai_advisory", __name__)
 
+# ---------------------------------------------------------------------------
+# LOCAL FARMING FALLBACK TIPS (used when Gemini is down)
+# ---------------------------------------------------------------------------
+FARMING_TIPS = {
+    "water": "💧 Water your crops early morning or late evening to reduce evaporation. Use drip irrigation for best results.",
+    "irrigation": "💧 Schedule irrigation based on soil moisture levels. Sandy soils need more frequent watering than clay soils.",
+    "yield": "🌾 Use balanced NPK fertilizer, ensure proper spacing, use certified seeds, and maintain timely pest control for best yields.",
+    "fertilizer": "🧪 Apply nitrogen during vegetative stage, phosphorus at planting, and potassium during fruiting. Avoid over-application.",
+    "soil": "🌍 Test soil pH and nutrients every season. Add organic compost to improve structure and water retention.",
+    "disease": "🔬 Remove infected leaves immediately. Use neem oil spray as organic treatment. Rotate crops each season to break disease cycles.",
+    "pest": "🐛 Use integrated pest management: introduce beneficial insects, apply neem-based sprays, and remove crop residue after harvest.",
+    "weather": "🌦️ Monitor local forecasts daily. Protect crops from frost with mulching. Ensure drainage during heavy rains.",
+    "crop": "🌱 Choose crop varieties suited to your local climate and soil type. Practice crop rotation for soil health.",
+    "seed": "🌰 Always use certified, disease-free seeds. Treat seeds with fungicide before planting for better germination.",
+}
+
+DEFAULT_TIP = "🌱 For best results, maintain proper irrigation, use balanced fertilizers, and monitor your crops regularly. Ask me a specific question about water, soil, pests, or diseases!"
+
+
+def _get_fallback_tip(question: str) -> str:
+    """Match user question keywords to local farming tips."""
+    q = question.lower()
+    for keyword, tip in FARMING_TIPS.items():
+        if keyword in q:
+            return tip
+    return DEFAULT_TIP
+
+
 @ai_advisory_bp.route("/api/v1/ai-advisory", methods=["POST"])
 def ai_advisory():
+    """
+    AI Advisory Endpoint
+    ---
+    tags:
+      - Advisory AI
+    parameters:
+      - in: body
+        name: body
+        required: true
+        schema:
+          type: object
+          properties:
+            message:
+              type: string
+    responses:
+      200:
+        description: AI advisory reply
+    """
     data = request.json
     if not data:
         return jsonify({"error": "No JSON data provided"}), 400
-        
+
     question = data.get("message")
     if not question:
         return jsonify({"error": "No message provided"}), 400
@@ -27,47 +74,22 @@ def ai_advisory():
     • Do NOT return JSON.
     • Do NOT explain in detail.
     • Use simple farmer-friendly language.
+    • Add 1-2 relevant emojis.
 
     Farmer Question:
     {question}
     """
 
-    api_key = os.getenv("GEMINI_API_KEY")
-    if not api_key:
-        return jsonify({"reply": "AI service temporarily unavailable (API key missing)"}), 200
-
-    url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key={api_key}"
-    payload = {
-        "contents": [
-            {
-                "parts": [
-                    { "text": prompt }
-                ]
-            }
-        ]
-    }
-    
     try:
-        response = requests.post(url, json=payload, headers={"Content-Type": "application/json"}, timeout=15)
-        
-        # Log raw response for debugging
-        raw_data = response.text
-        print("Raw Gemini Response:", raw_data)
-        
-        response.raise_for_status()
-        
-        # Parse response: response.candidates[0].content.parts[0].text
-        data = response.json()
-        ai_text = data["candidates"][0]["content"]["parts"][0]["text"]
-        
-        print("Parsed AI Text:", ai_text)
-        
-        return jsonify({
-            "reply": ai_text
-        }), 200
+        from core.gemini_client import ask_gemini
+        response = ask_gemini(prompt)
+
+        # Detect AI failure strings and substitute with local fallback
+        if "busy" in response.lower() or "offline" in response.lower() or "unavailable" in response.lower():
+            response = _get_fallback_tip(question)
+
+        return jsonify({"reply": response}), 200
+
     except Exception as e:
-        error_msg = str(e)
-        print("Gemini API Error:", error_msg)
-        return jsonify({
-            "reply": f"Technical difficulty: {error_msg}"
-        }), 200
+        # Never leak technical errors — return farming tip instead
+        return jsonify({"reply": _get_fallback_tip(question)}), 200

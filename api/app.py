@@ -483,12 +483,13 @@ def gemini_status():
     Returns specific status of the Gemini client implementation.
     """
     try:
-        from core.gemini_client import api_key, MIN_DELAY, gemini_lock  # type: ignore
+        from core.gemini_client import get_client, PRIMARY_MODEL, FALLBACK_MODEL
+        client = get_client()
         return jsonify({
-            "api_key_loaded": bool(api_key),
-            "model": "gemini-1.5-flash",
-            "request_lock": "active" if gemini_lock else "inactive",
-            "rate_limit_delay": f"{MIN_DELAY} seconds"
+            "api_key_loaded": client is not None,
+            "primary_model": PRIMARY_MODEL,
+            "fallback_model": FALLBACK_MODEL,
+            "status": "online" if client else "offline"
         }), 200
     except Exception as e:
         return jsonify({"status": "error", "message": str(e)}), 200
