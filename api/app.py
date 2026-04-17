@@ -817,5 +817,7 @@ def system_diagnostics():
 # RUN SERVER
 # --------------------------------------------------
 if __name__ == "__main__":
-    from datetime import datetime
-    app.run(host="0.0.0.0", port=5000, debug=True)
+    import os
+    port = int(os.environ.get("PORT", 5000))
+    logger.info(f"Starting KisaanSaathi server via direct python run on port {port}")
+    app.run(host="0.0.0.0", port=port)
