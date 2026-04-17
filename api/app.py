@@ -83,6 +83,7 @@ from api.weather_routes import weather_bp  # type: ignore
 from api.alert_controller import alert_api  # type: ignore
 from api.ai_advisory import ai_advisory_bp  # type: ignore
 from api.carbon_controller import carbon_bp  # type: ignore
+from api.activity_controller import activity_bp  # type: ignore
 import threading
 from core.auto_irrigation_worker import run_loop  # type: ignore
 
@@ -103,6 +104,7 @@ app.register_blueprint(carbon_bp)
 app.register_blueprint(weather_bp)
 app.register_blueprint(alert_api)
 app.register_blueprint(ai_advisory_bp)
+app.register_blueprint(activity_bp)
 
 # Start background auto-irrigation worker
 try:

@@ -1,13 +1,5 @@
 {
-    "farms": [
-        {
-            "farm_name": "Valley",
-            "total_land_acres": 10,
-            "latitude": 48.65450859069824,
-            "longitude": 46.8421052631579,
-            "id": "85c6e097-2fe8-4995-a76e-5b0406fa5cd6"
-        }
-    ],
+    "farms": [],
     "crops": [
         {
             "farm_id": "85c6e097-2fe8-4995-a76e-5b0406fa5cd6",
@@ -17,6 +9,24 @@
             "seeds_planted": 10,
             "image_url": "https://images.unsplash.com/photo-1625246333195-bf8f85404843?q=80&w=1000&auto=format&fit=crop",
             "id": "fc637bd6-8a36-443f-b0c1-c79d2b1c810c"
+        },
+        {
+            "farm_id": "6e9777fa-919f-453b-8363-f5ef750de9a8",
+            "crop_name": "BAsmati",
+            "crop_type": "rice",
+            "sowing_date": "14 - Apr - 2026",
+            "seeds_planted": 100,
+            "image_url": "https://images.unsplash.com/photo-1582515073490-dc84fbbf5f84?q=80&w=1000&auto=format&fit=crop",
+            "id": "e885ec55-e918-4f10-aac8-544b256c4672"
+        },
+        {
+            "farm_id": "85c6e097-2fe8-4995-a76e-5b0406fa5cd6",
+            "crop_name": "Basmati",
+            "crop_type": "rice",
+            "sowing_date": "16 - Apr - 2026",
+            "seeds_planted": 100,
+            "image_url": "https://images.unsplash.com/photo-1582515073490-dc84fbbf5f84?q=80&w=1000&auto=format&fit=crop",
+            "id": "91b48955-43a5-44d0-92de-2915d561eb87"
         }
     ]
 }

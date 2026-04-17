@@ -13,13 +13,21 @@ def get_farms():
         result = supabase.table("farms").select("*").execute()
         db_farms = result.data if result and result.data else []
         local_farms = get_all_farms()
-        
+
+        # Merge, deduplicate by ID (Supabase wins over local for same ID)
+        seen_ids = set()
+        all_farms = []
+        for f in db_farms + local_farms:
+            fid = f.get("id")
+            if fid and fid not in seen_ids:
+                seen_ids.add(fid)
+                all_farms.append(f)
+
         # Standardize units for output
-        all_farms = db_farms + local_farms
         for f in all_farms:
             if "total_land_acres" in f:
                 f["total_land_ha"] = round(f.pop("total_land_acres") * 0.404686, 2)
-                
+
         return jsonify(all_farms), 200
     except Exception as e:
         return jsonify(get_all_farms()), 200
@@ -30,29 +38,34 @@ def create_farm():
         data = request.json
         if not data:
             return jsonify({"status": "error", "message": "No data provided"}), 400
-            
-        # Receive Hectares, store internally as acres until DB migration
+
         area_ha = float(data.get("area", 0))
-        area_acres = area_ha / 0.404686
-        
+        area_acres = round(area_ha / 0.404686, 4)
+
+        farm_name = data.get("name", "Unnamed Farm")
+        latitude = data.get("latitude") or None
+        longitude = data.get("longitude") or None
+
         farm_data = {
-            "farm_name": data.get("name", "Unnamed Farm"),
+            "farm_name": farm_name,
             "total_land_acres": area_acres,
-            "latitude": data.get("latitude", 0),
-            "longitude": data.get("longitude", 0)
+            "latitude": latitude,
+            "longitude": longitude,
         }
-        
-        # Insert into Supabase
+
         try:
+            # user_id is now nullable — this insert fires Supabase Realtime
             result = supabase.table("farms").insert(farm_data).execute()
             if result and result.data:
+                print(f"[Farm] Created in Supabase: {farm_name}")
                 return jsonify(result.data[0]), 201
-            else:
-                return jsonify(add_local_farm(farm_data)), 201
-        except Exception as e:
-            # Fallback to local DB due to auth or FK error
-            return jsonify(add_local_farm(farm_data)), 201
-            
+        except Exception as db_err:
+            print(f"[Farm] Supabase insert failed ({db_err}), falling back to local_db")
+
+        # Local fallback (preserves offline resilience)
+        local = add_local_farm(dict(farm_data))
+        return jsonify(local), 201
+
     except Exception as e:
         return jsonify({"status": "error", "message": str(e)}), 500
 

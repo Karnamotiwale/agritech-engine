@@ -38,7 +38,7 @@ def generate_ai_response(prompt, image=None):
         last_call_time = time.time()
 
         try:
-            model_name = "gemini-1.5-pro" if image else "gemini-1.5-flash"
+            model_name = "gemini-pro-latest" if image else "gemini-flash-latest"
             contents = [prompt]
             if image:
                 contents.append(image)
@@ -70,7 +70,7 @@ def ask_gemini(prompt):
         
         try:
             response = client.models.generate_content(
-                model="gemini-2.5-flash",
+                model="gemini-flash-latest",
                 contents=prompt
             )
             return response.text
@@ -95,7 +95,7 @@ def analyze_image(prompt, image_path):
         myfile = client.files.upload(file=image_path)
         
         response = client.models.generate_content(
-            model='gemini-2.5-flash',
+            model='gemini-flash-latest',
             contents=[prompt, myfile]
         )
         return response.text

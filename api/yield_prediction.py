@@ -5,31 +5,27 @@ yield_bp = Blueprint('yield_prediction', __name__)
 
 @yield_bp.route('/api/v1/crops/yield-prediction', methods=['POST'])
 def yield_prediction():
-    """
-    Predict Crop Yield
-    ---
-    tags:
-      - Prediction
-    parameters:
-      - in: body
-        name: body
-        schema:
-          type: object
-    responses:
-      200:
-        description: Successful response
-    """
     data = request.json or {}
     try:
-        crop = data.get("crop", "unknown")
-        # Ensure journey exists for feature builder
-        journey = data.get("journey", []) 
+        prediction = predict_yield(data)
         
-        # we can inject data features safely into journey format if empty
-        if not journey:
-            journey = [data]
-            
-        prediction = predict_yield(crop, journey)
-        return jsonify(prediction), 200
+        # Structure the response precisely for the frontend Yield Prediction UI
+        return jsonify({
+            "estimatedYield": f"{prediction['yield']} {prediction['unit']}",
+            "yieldValue": prediction['yield'],
+            "confidence": prediction['confidence'],
+            "harvestWindow": prediction['harvest_window'],
+            "summary": {
+                "expectedYield": f"{prediction['yield']} {prediction['unit']}",
+                "yieldRange": f"{prediction['yield'] * 0.9:.2f} - {prediction['yield'] * 1.1:.2f} Tons/Ha",
+                "stability": "STABLE",
+                "vsAverage": "N/A"
+            },
+            "factors": [],
+            "risks": [],
+            "explainability": {"confidence": prediction['confidence'], "reason": "Basic analytical math derivation applied."}
+        }), 200
     except Exception as e:
+        import traceback
+        traceback.print_exc()
         return jsonify({"error": str(e)}), 500
