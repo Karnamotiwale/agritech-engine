@@ -27,6 +27,15 @@
             "seeds_planted": 100,
             "image_url": "https://images.unsplash.com/photo-1582515073490-dc84fbbf5f84?q=80&w=1000&auto=format&fit=crop",
             "id": "91b48955-43a5-44d0-92de-2915d561eb87"
+        },
+        {
+            "farm_id": "32f247cf-752d-4dd5-9264-afb2d7dd1bcd",
+            "crop_name": "corn",
+            "crop_type": "corn",
+            "sowing_date": "18 - Apr - 2026",
+            "seeds_planted": 10,
+            "image_url": "https://images.unsplash.com/photo-1625246333195-bf8f85404843?q=80&w=1000&auto=format&fit=crop",
+            "id": "d9ecd9d7-87be-445a-ad3d-2ac0c7feb0d2"
         }
     ]
 }

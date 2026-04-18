@@ -95,7 +95,6 @@ from api.chat import chat_bp  # type: ignore
 from api.crop_rotation import rotation_bp  # type: ignore
 from api.sustainability import sustainability_bp  # type: ignore
 from api.crop_disease_detection import crop_disease_bp  # type: ignore
-from api.sensor_controller import sensor_api  # type: ignore
 from api.valve_controller import valve_api  # type: ignore
 from api.farm_controller import farm_api  # type: ignore
 from api.cropnet_detection import cropnet_bp  # type: ignore
@@ -116,7 +115,6 @@ app.register_blueprint(chat_bp)
 app.register_blueprint(rotation_bp)
 app.register_blueprint(sustainability_bp)
 app.register_blueprint(crop_disease_bp)
-app.register_blueprint(sensor_api)
 app.register_blueprint(valve_api)
 app.register_blueprint(farm_api)
 app.register_blueprint(cropnet_bp)
@@ -587,57 +585,7 @@ def ai_xai():
         return jsonify({"reason": "Error retrieving explanation", "factors": []}), 200
 
 
-# --------------------------------------------------
-# SENSOR ENDPOINTS (Maintained for backward sync)
-# --------------------------------------------------
-@app.route("/api/v1/sensors", methods=["GET"])
-@app.route("/api/v1/sensors/tick", methods=["GET"])
-def get_sensors():
-    try:
-        crop_id = request.args.get("crop_id")
-        
-        # Fetch latest sensor reading from Supabase
-        # In a real app we would filter by crop_id or farm_id
-        # query = supabase.table("sensor_readings").select("*").eq('crop_id', crop_id) ...
-        
-        response = (
-            supabase.table("sensor_readings")
-            .select("*")
-            .order("created_at", desc=True)
-            .limit(1)
-            .execute()
-        )
-        
-        if response.data and len(response.data) > 0:
-            latest = response.data[0]
-            return jsonify({
-                "moisture": latest.get("soil_moisture", 0),
-                "ph": latest.get("ph_level", 0),
-                "n": latest.get("nitrogen", 0),
-                "p": latest.get("phosphorus", 0),
-                "k": latest.get("potassium", 0),
-                "temperature": latest.get("temperature", 0),
-                "humidity": latest.get("humidity", 0),
-                "timestamp": latest.get("created_at")
-            }), 200
-        else:
-             # Return valid but empty structure (0 values) rather than error, 
-             # so UI shows 0 instead of crashing.
-            # Return realistic simulation data as requested by user
-            # "for now whichever things are not working put raw data to it"
-            return jsonify({
-                "moisture": 64.0, 
-                "ph": 6.8, 
-                "n": 140, 
-                "p": 45, 
-                "k": 60, 
-                "temperature": 28.5, 
-                "humidity": 62.0, 
-                "status": "simulated"
-            }), 200
 
-    except Exception as e:
-        return jsonify({"error": "An internal error occurred"}), 400
 
 # --------------------------------------------------
 # RESOURCE ANALYTICS API (For Financial Summary)
