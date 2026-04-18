@@ -25,9 +25,9 @@ logger = logging.getLogger(__name__)
 # ---------------------------------------------------------------------------
 _client = None
 
-PRIMARY_MODEL = "gemini-1.5-flash"
-FALLBACK_MODEL = "gemini-2.0-flash"
-VISION_MODEL = "gemini-1.5-flash"
+PRIMARY_MODEL = "gemini-flash-latest"
+FALLBACK_MODEL = "gemini-2.5-flash-lite"
+VISION_MODEL = "gemini-flash-latest"
 
 def get_client():
     """Lazy-initialise the Gemini SDK client."""

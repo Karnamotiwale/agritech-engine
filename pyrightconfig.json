@@ -6,14 +6,16 @@
     "**/__pycache__",
     "venv"
   ],
-  "venvPath": "c:/Users/Karna/Desktop/AGRIAI/agritech-engine",
-  "venv": "venv",
   "extraPaths": [
-    "c:/Users/Karna/Desktop/AGRIAI/agritech-engine",
-    "c:/Users/Karna/Desktop/AGRIAI/agritech-engine/api",
-    "c:/Users/Karna/Desktop/AGRIAI/agritech-engine/core"
+    ".",
+    "api",
+    "core",
+    "services",
+    "models"
   ],
-  "pythonPath": "c:/Users/Karna/Desktop/AGRIAI/agritech-engine/venv/Scripts/python.exe",
+  "venvPath": ".",
+  "venv": "venv",
+  "pythonVersion": "3.13",
   "typeCheckingMode": "basic",
   "useLibraryCodeForTypes": true,
   "reportMissingImports": "warning",
